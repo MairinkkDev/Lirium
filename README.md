@@ -1,5 +1,5 @@
 # Lirium
-Repositório oficial dos projetos e aplicações web desenvolvidos pela Lirium, uma empresa fictícia focada na criação de soluções modernas para desenvolvedores.
+Repositório oficial dos projetos e aplicações web desenvolvidos pela Lirium, uma empresa fictícia focada na criação de soluções modernas para desenvolvedores e criada por alunos da Escola Técnica Estadual de Guaianazes
 
 🚀 Sobre a Lirium
 
