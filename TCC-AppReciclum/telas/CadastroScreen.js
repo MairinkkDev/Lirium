@@ -15,9 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-// Caso não use Expo, troque:
-// - LinearGradient por 'react-native-linear-gradient'
-// - Ionicons por 'react-native-vector-icons/Ionicons'
+
 
 export default function CadastroScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -25,12 +23,12 @@ export default function CadastroScreen({ navigation }) {
   const [cep, setCep] = useState('');
 
   const handleCriar = () => {
-    // TODO: lógica de cadastro
+    
     console.log('Criar conta', { email, senha, cep });
   };
 
   const handleVoltar = () => {
-    // TODO: navegação de volta para o login
+   
     if (navigation) navigation.goBack();
     console.log('Voltar');
   };
@@ -39,14 +37,14 @@ export default function CadastroScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Cabeçalho com gradiente verde */}
+      
       <LinearGradient
         colors={['#0f5c2e', '#3fa63f']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        {/* Espaço reservado para o logo (usuário irá inserir) */}
+       
         <View style={styles.logoPlaceholder}>
          <Image
             source={require('../assets/logo.png')}
@@ -55,7 +53,7 @@ export default function CadastroScreen({ navigation }) {
         </View>
       </LinearGradient>
 
-      {/* Cartão inferior com bordas arredondadas sobrepondo o header */}
+     
       <SafeAreaView style={styles.cardWrapper}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -67,7 +65,7 @@ export default function CadastroScreen({ navigation }) {
           >
             <Text style={styles.title}>CADASTRO</Text>
 
-            {/* Campo Email */}
+            
             <View style={styles.inputContainer}>
               <Ionicons
                 name="person-outline"
@@ -86,7 +84,7 @@ export default function CadastroScreen({ navigation }) {
               />
             </View>
 
-            {/* Campo Senha */}
+            
             <View style={styles.inputContainer}>
               <Ionicons
                 name="lock-closed-outline"
@@ -104,7 +102,7 @@ export default function CadastroScreen({ navigation }) {
               />
             </View>
 
-            {/* Campo CEP */}
+           
             <View style={styles.inputContainer}>
               <Ionicons
                 name="location-outline"
@@ -122,7 +120,7 @@ export default function CadastroScreen({ navigation }) {
               />
             </View>
 
-            {/* Botão Criar */}
+            
             <TouchableOpacity
               style={styles.criarButton}
               onPress={handleCriar}
@@ -131,7 +129,7 @@ export default function CadastroScreen({ navigation }) {
               <Text style={styles.criarButtonText}>CRIAR</Text>
             </TouchableOpacity>
 
-            {/* Botão Voltar */}
+            
             <TouchableOpacity
               style={styles.backButton}
               onPress={handleVoltar}
@@ -169,7 +167,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     flex: 1,
-    marginTop: -30, // faz o card subir e sobrepor o header
+    marginTop: -30, 
   },
   card: {
     flexGrow: 1,
