@@ -23,7 +23,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleEntrar = () => {
     
-    console.log('Entrar', { email, senha });
+    navigation.navigate('Home');
   };
 
   const handleEsqueceuSenha = () => {
