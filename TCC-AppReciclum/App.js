@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
- 
+
 import LoginScreen from './telas/LoginScreen';
 import CadastroScreen from './telas/CadastroScreen';
 import HomeScreen from './telas/HomeScreen';
@@ -10,8 +10,10 @@ import PerfilScreen from './telas/PerfilScreen';
 import CadastrarEcopontoScreen from './telas/CadastrarEcopontoScreen';
 import GerenciarEcopontosScreen from './telas/GerenciarEcopontosScreen';
 import DenunciasScreen from './telas/DenunciasScreen';
+import ReciclagemScreen from './telas/ReciclagemScreen'; // <-- faltava
+
 const Stack = createNativeStackNavigator();
- 
+
 export default function App() {
   return (
     <>
@@ -28,6 +30,7 @@ export default function App() {
           <Stack.Screen name="CadastrarEcoponto" component={CadastrarEcopontoScreen} />
           <Stack.Screen name="GerenciarEcopontos" component={GerenciarEcopontosScreen} />
           <Stack.Screen name="Denuncias" component={DenunciasScreen} />
+          <Stack.Screen name="Reciclagem" component={ReciclagemScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
