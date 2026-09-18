@@ -18,6 +18,8 @@ export default function BottomTabBar({ active = 'inicio', navigation }) {
       navigation.navigate('Home');
     }if (tab.route === 'perfil') {
       navigation.navigate('Perfil'); 
+    }if (tab.route === 'Mapa') {
+      navigation.navigate('Mapa');
     }else {
       console.log(`TODO: navegar para tela "${tab.label}"`);
     }
