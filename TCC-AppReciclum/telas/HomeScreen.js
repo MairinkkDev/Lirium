@@ -13,21 +13,34 @@ import {
   Platform,
 } from 'react-native';
 
-import { Ionicons, MaterialCommunityIcons,} from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, } from '@expo/vector-icons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { LinearGradient } from 'expo-linear-gradient';
-import BottomTabBar from './components/BottomTabBar';
-import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './components/AppHeader';
+
 export default function HomeScreen({ navigation }) {
+
 
 
   return (
     <SafeAreaView style={styles.container}>
 
       <StatusBar barStyle="light-content" />
-     
-           
-           <AppHeader height={100} />
+
+      {/* fundo gradiente aqui*/}
+      <LinearGradient
+        colors={['#0f5c2e', '#3fa63f']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        {/* logo  */}
+        <View style={styles.logoPlaceholder}>
+          <Image
+            source={require('../assets/logo.png')}
+            style={styles.logoImage}
+          />
+        </View>
+      </LinearGradient>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -141,10 +154,11 @@ export default function HomeScreen({ navigation }) {
                 styles.materialButton,
                 styles.plasticButton
               ]}
+                onPress={() => navigation.navigate('Reciclagem', { materialId: 'pet' })}
             >
 
               <View style={styles.iconBoxPlastic}>
-               <FontAwesome6 name="bottle-water" size={30} color="white" />
+                <FontAwesome6 name="bottle-water" size={30} color="white" />
               </View>
 
               <Text style={styles.plasticText}>
@@ -160,6 +174,7 @@ export default function HomeScreen({ navigation }) {
                 styles.materialButton,
                 styles.paperButton
               ]}
+               onPress={() => navigation.navigate('Reciclagem', { materialId: 'papelao' })}
             >
 
               <View style={styles.iconBoxPaper}>
@@ -183,6 +198,7 @@ export default function HomeScreen({ navigation }) {
                 styles.materialButton,
                 styles.metalButton
               ]}
+              onPress={() => navigation.navigate('Reciclagem', { materialId: 'lata' })}
             >
 
               <View style={styles.iconBoxMetal}>
@@ -206,6 +222,8 @@ export default function HomeScreen({ navigation }) {
                 styles.materialButton,
                 styles.glassButton
               ]}
+                onPress={() => navigation.navigate('Reciclagem', { materialId: 'vidro' })}
+
             >
 
               <View style={styles.iconBoxGlass}>
@@ -272,9 +290,74 @@ export default function HomeScreen({ navigation }) {
       </ScrollView>
 
 
+      {/* ================= MENU INFERIOR ================= */}
 
-      
-              <BottomTabBar active="inicio" navigation={navigation} />
+      <View style={styles.bottomMenu}>
+
+        <TouchableOpacity style={styles.menuItem}>
+
+          <Ionicons
+            name="home"
+            size={30}
+            color="#55A951"
+          />
+
+          <Text style={styles.menuText}>
+            Início
+          </Text>
+
+        </TouchableOpacity>
+
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Reciclagem')}
+        >
+
+          <MaterialCommunityIcons
+            name="recycle-variant"
+            size={32}
+            color="#55A951"
+          />
+
+          <Text style={styles.menuText}>
+            Reciclar
+          </Text>
+
+        </TouchableOpacity>
+
+
+        <TouchableOpacity style={styles.menuItem}>
+
+          <MaterialCommunityIcons
+            name="map-marker-radius"
+            size={32}
+            color="#55A951"
+          />
+
+          <Text style={styles.menuText}>
+            Mapa
+          </Text>
+
+        </TouchableOpacity>
+
+
+        <TouchableOpacity style={styles.menuItem}>
+
+          <Ionicons
+            name="person-circle"
+            size={32}
+            color="#55A951"
+          />
+
+          <Text style={styles.menuText}>
+            Perfil
+          </Text>
+
+        </TouchableOpacity>
+
+      </View>
+
     </SafeAreaView>
   );
 }
@@ -285,6 +368,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9F1',
   },
+
+
+  /* ================= CABEÇALHO ================= */
+
+  header: {
+    height: 80,
+    backgroundColor: '#087C20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  logoContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 25,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
 
   /* ================= SCROLL ================= */
 
