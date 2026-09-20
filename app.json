@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "TCC",
+    "slug": "TCC",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.anonymous.TCC",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBR9UTbgaIYY50uplkTzikvxXYakMCEaeg"
+        }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9035bd77-7503-426c-9729-7b3ef461c953"
+      }
+    }
+  }
+}
