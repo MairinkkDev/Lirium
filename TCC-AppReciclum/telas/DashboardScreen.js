@@ -14,8 +14,7 @@ import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './compon
 import BottomTabBar from './components/BottomTabBar';
 import GaugeChart from './components/GaugeChart';
 
-// Dados estáticos por enquanto — troque pelas chamadas de
-// /dashboard/usuarios/total, /dashboard/usuarios/ativos, etc. quando integrar a API
+
 const DADOS = {
   usuariosTotal: 67345,
   usuariosOnline: 12645,
@@ -36,7 +35,7 @@ export default function DashboardScreen({ navigation }) {
       <AppHeader height={90} />
 
       <SafeAreaView style={styles.body}>
-        {/* Cabeçalho da tela com voltar + título */}
+       
         <View style={styles.titleBox}>
           <TouchableOpacity onPress={handleVoltar} activeOpacity={0.8}>
             <Ionicons name="chevron-back" size={22} color="#333333" />
@@ -54,13 +53,13 @@ export default function DashboardScreen({ navigation }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Usuários totais */}
+         
           <Text style={styles.sectionLabel}>Usuários</Text>
           <Text style={styles.bigNumber}>
             {DADOS.usuariosTotal.toLocaleString('pt-BR')}
           </Text>
 
-          {/* Gauge de usuários online */}
+          
           <View style={styles.gaugeWrapper}>
             <GaugeChart
               value={DADOS.usuariosOnline}
@@ -69,7 +68,7 @@ export default function DashboardScreen({ navigation }) {
             />
           </View>
 
-          {/* Suspenso */}
+          
           <TouchableOpacity
             style={styles.row}
             activeOpacity={0.8}
@@ -83,7 +82,7 @@ export default function DashboardScreen({ navigation }) {
             <Ionicons name="chevron-forward" size={18} color={GRAY_TEXT} />
           </TouchableOpacity>
 
-          {/* Cooperativas */}
+         
           <Text style={[styles.sectionLabel, { marginTop: 28 }]}>Cooperativas</Text>
 
           <View style={styles.statsRow}>
