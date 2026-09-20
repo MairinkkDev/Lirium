@@ -4,6 +4,8 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialScreen from "./MaterialScreen";
 import { materiais } from "../data/materiais";
+import BottomTabBar from './components/BottomTabBar';
+import AppHeader from './components/AppHeader';
 
 
 const botoes = [
@@ -90,22 +92,7 @@ export default function ReciclagemScreen({ navigation, route }) {
 
       {/* HEADER */}
 
-      <LinearGradient
-        colors={['#0f5c2e', '#3fa63f']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        {/* logo  */}
-        <View style={styles.logoPlaceholder}>
-          <Image
-            source={require('../assets/logo.png')}
-            style={styles.logoImage}
-          />
-        </View>
-      </LinearGradient>
-
-
+      <AppHeader></AppHeader>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -208,74 +195,7 @@ export default function ReciclagemScreen({ navigation, route }) {
       {/* container fim*/}
 
       {/* MENU INFERIOR */}
-
-      <View style={styles.bottomMenu}>
-
-        <TouchableOpacity style={styles.menuItem}
-          onPress={() => navigation.navigate('Home')} >
-
-          <Ionicons
-            name="home"
-            size={30}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Início
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('Reciclagem')}
-        >
-
-          <MaterialCommunityIcons
-            name="recycle-variant"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Reciclar
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity style={styles.menuItem}>
-
-          <MaterialCommunityIcons
-            name="map-marker-radius"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Mapa
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity style={styles.menuItem}>
-
-          <Ionicons
-            name="person-circle"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Perfil
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-
+        <BottomTabBar active="reciclagem" navigation={navigation} />
 
     </View>
   );

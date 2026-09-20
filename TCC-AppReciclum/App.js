@@ -11,7 +11,7 @@ import PerfilScreen from './telas/PerfilScreen';
 import CadastrarEcopontoScreen from './telas/CadastrarEcopontoScreen';
 import GerenciarEcopontosScreen from './telas/GerenciarEcopontosScreen';
 import DenunciasScreen from './telas/DenunciasScreen';
-import ReciclagemScreen from './telas/ReciclagemScreen'; // <-- faltava
+import ReciclagemScreen from './telas/ReciclagemScreen'; 
 
 const Stack = createNativeStackNavigator();
 

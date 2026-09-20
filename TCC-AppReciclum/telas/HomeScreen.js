@@ -13,13 +13,13 @@ import {
   Platform,
 } from 'react-native';
 
+import AppHeader from './components/AppHeader';
+import BottomTabBar from './components/BottomTabBar';
 import { Ionicons, MaterialCommunityIcons, } from '@expo/vector-icons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen({ navigation }) {
-
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -27,20 +27,8 @@ export default function HomeScreen({ navigation }) {
       <StatusBar barStyle="light-content" />
 
       {/* fundo gradiente aqui*/}
-      <LinearGradient
-        colors={['#0f5c2e', '#3fa63f']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        {/* logo  */}
-        <View style={styles.logoPlaceholder}>
-          <Image
-            source={require('../assets/logo.png')}
-            style={styles.logoImage}
-          />
-        </View>
-      </LinearGradient>
+
+        <AppHeader></AppHeader>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -292,71 +280,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* ================= MENU INFERIOR ================= */}
 
-      <View style={styles.bottomMenu}>
-
-        <TouchableOpacity style={styles.menuItem}>
-
-          <Ionicons
-            name="home"
-            size={30}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Início
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('Reciclagem')}
-        >
-
-          <MaterialCommunityIcons
-            name="recycle-variant"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Reciclar
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity style={styles.menuItem}>
-
-          <MaterialCommunityIcons
-            name="map-marker-radius"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Mapa
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity style={styles.menuItem}>
-
-          <Ionicons
-            name="person-circle"
-            size={32}
-            color="#55A951"
-          />
-
-          <Text style={styles.menuText}>
-            Perfil
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
+      <BottomTabBar active="inicio" navigation={navigation} />
 
     </SafeAreaView>
   );
@@ -619,34 +543,5 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-
-  /* ================= MENU INFERIOR ================= */
-
-  bottomMenu: {
-    height: 70,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#DDDDDD',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-
-  menuItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  menuText: {
-    color: '#55A951',
-    fontSize: 11,
-    marginTop: 2,
-  },
-
-  logoImage: {
-    width: 60,
-    height: 60,
-    resizeMode: "contain"
-  },
 
 });
