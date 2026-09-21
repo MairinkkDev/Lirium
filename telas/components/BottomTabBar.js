@@ -6,8 +6,9 @@ import { GREEN_MAIN, GRAY_TEXT } from './AppHeader';
 const TABS = [
   { key: 'inicio', label: 'Início', route: 'Home', iconSet: 'ion', icon: 'home-outline', iconActive: 'home' },
   { key: 'reciclagem', label: 'Reciclagem', route: 'Reciclagem', iconSet: 'mci', icon: 'recycle', iconActive: 'recycle' },
-  { key: 'mapa', label: 'Mapa', route: 'Mapa', iconSet: 'ion', icon: 'location-outline', iconActive: 'location' },
+   { key: 'telaMapaOngs', label: 'TelaMapaOngs', route: 'telaMapaOngs', iconSet: 'ion', icon: 'location-outline', iconActive: 'location' },
   { key: 'perfil', label: 'Perfil', route: 'perfil', iconSet: 'ion', icon: 'person-outline', iconActive: 'person' },
+  
 ];
 
 export default function BottomTabBar({ active = 'inicio', navigation }) {
@@ -22,6 +23,8 @@ export default function BottomTabBar({ active = 'inicio', navigation }) {
       navigation.navigate('Mapa');
     }if (tab.route === 'Reciclagem') {
       navigation.navigate('Reciclagem');
+    }if (tab.route === 'telaMapaOngs') {
+      navigation.navigate('telaMapaOngs');
     }else {
       console.log(`TODO: navegar para tela "${tab.label}"`);
     }
