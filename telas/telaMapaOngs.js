@@ -141,6 +141,19 @@ export default function telaMapaOngs({navigation}) {
 
       </TouchableOpacity>
 
+       <TouchableOpacity style={styles.agenciaItem} >
+
+        <View style={styles.agenciaIcon}>
+        <MaterialCommunityIcons name="party-popper" size={24} color="white" />
+        </View>
+
+        <View style={styles.agenciaTexts}>
+          <Text style={styles.agenciaName}>Fora poluição</Text>
+          <Text style={styles.agencialocal}>rua da esperança, N° 89</Text>
+        </View>
+
+      </TouchableOpacity>
+
       </View>
 
 
