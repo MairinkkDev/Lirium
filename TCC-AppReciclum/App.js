@@ -13,6 +13,8 @@ import GerenciarEcopontosScreen from './telas/GerenciarEcopontosScreen';
 import DenunciasScreen from './telas/DenunciasScreen';
 import ReciclagemScreen from './telas/ReciclagemScreen'; 
 import DashboardScreen from './telas/DashboardScreen';
+import TelaMapa from './telas/TelaMapa';
+import TelaCamera from './telas/TelaCamera';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +37,8 @@ export default function App() {
           <Stack.Screen name="Denuncias" component={DenunciasScreen} />
           <Stack.Screen name="Reciclagem" component={ReciclagemScreen} />
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen name="TelaMapa" component={TelaMapa} />
+          <Stack.Screen name="TelaCamera" component={TelaCamera} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

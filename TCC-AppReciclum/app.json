@@ -31,14 +31,27 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-maps",
-        {
-          "requestLocationPermission": true,
-          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
-        }
-      ]
-    ],
+  [
+    "expo-maps",
+    {
+      "requestLocationPermission": true,
+      "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
+    }
+  ],
+  [
+    "expo-camera",
+    {
+      "cameraPermission": "Permitir que o TCC use sua câmera",
+      "microphonePermission": "Permitir que o TCC use seu microfone"
+    }
+  ],
+  [
+    "expo-image-picker",
+    {
+      "photosPermission": "Permitir que o TCC acesse suas fotos"
+    }
+  ]
+],
     "extra": {
       "eas": {
         "projectId": "9035bd77-7503-426c-9729-7b3ef461c953"

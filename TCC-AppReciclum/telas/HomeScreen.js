@@ -18,6 +18,7 @@ import BottomTabBar from './components/BottomTabBar';
 import { Ionicons, MaterialCommunityIcons, } from '@expo/vector-icons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { LinearGradient } from 'expo-linear-gradient';
+import EvilIcons from '@expo/vector-icons/EvilIcons';
 
 export default function HomeScreen({ navigation }) {
 
@@ -216,7 +217,7 @@ export default function HomeScreen({ navigation }) {
 
               <View style={styles.iconBoxGlass}>
                 <MaterialCommunityIcons
-                  name="bottle-wine "
+                  name="bottle-wine-outline"
                   size={30}
                   color="white"
                 />
@@ -245,35 +246,57 @@ export default function HomeScreen({ navigation }) {
           {/* EVENTOS */}
           <TouchableOpacity style={styles.infoButton}>
 
-            <MaterialCommunityIcons
-              name="calendar-month-outline"
-              size={38}
-              color="#49A84B"
-            />
+            <View style={styles.infoButtonE}>
+              <MaterialCommunityIcons
+                name="calendar-month-outline"
+                size={50}
+                color="#49A84B"
+              />
 
-            <Text style={styles.infoButtonText}>
-              EVENTOS
-            </Text>
-
+              <Text style={styles.infoButtonText}>
+                EVENTOS
+              </Text>
+            </View>
           </TouchableOpacity>
 
 
           {/* ONGS */}
           <TouchableOpacity style={styles.infoButton}>
 
-            <MaterialCommunityIcons
-              name="hand-heart-outline"
-              size={38}
-              color="#49A84B"
-            />
+            <View style={styles.infoButtonO}>
+              <MaterialCommunityIcons
+                name="hand-heart-outline"
+                size={50}
+                color="#49A84B"
+              />
 
-            <Text style={styles.infoButtonText}>
-              ONGS
-            </Text>
-
+              <Text style={styles.infoButtonText}>
+                ONGS
+              </Text>
+            </View>
           </TouchableOpacity>
 
+
+          {/*CAMERA */}
+
+        
+
         </View>
+
+        <Text style={styles.infoTitle}>
+          Detecte o material reciclável
+        </Text>
+
+          <TouchableOpacity style={styles.infoButton} onPress={() => navigation.navigate('TelaCamera')}>
+
+              <View style={styles.containerCamera}>
+
+                <View style={styles.infoButton}>
+                  <EvilIcons name="camera" size={120} color="#49A84B" />
+                </View>
+              </View>
+
+          </TouchableOpacity>
 
       </ScrollView>
 
@@ -290,7 +313,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#F8F9F1',
+    backgroundColor: '#e3e3e3',
   },
 
 
@@ -524,6 +547,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 20,
+    
   },
 
   infoButton: {
@@ -542,6 +566,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 3,
   },
-
-
+  containerCamera: {
+    width: 130,
+    height: 95,
+    borderWidth: 3,
+    borderColor: '#3ecb28',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  
+  },
+  infoButtonE: {
+    width: 100,
+    height: 90,
+    borderWidth: 3,
+    borderColor: '#3ecb28',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoButtonO: {
+    width: 100,
+    height: 90,
+    borderWidth: 3,
+    borderColor: '#3ecb28',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
