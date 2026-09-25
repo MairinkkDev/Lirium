@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialScreen from "./MaterialScreen";
 import { materiais } from "../data/materiais";
@@ -99,6 +100,29 @@ export default function ReciclagemScreen({ navigation, route }) {
         contentContainerStyle={styles.scroll} >
 
 
+        {/* botão escanear com a câmera */}
+
+        <View style={styles.scanWrapper}>
+          <TouchableOpacity onPress={() => navigation.navigate('TelaCamera')}>
+            <LinearGradient
+              colors={["#0A8443", "#5BAA4F"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.scanGradient}
+            >
+              <View style={styles.scanIconCircle}>
+                <EvilIcons name="camera" size={32} color="#FFFFFF" />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.scanTitle}>Escanear com a câmera</Text>
+                <Text style={styles.scanSubtitle}>Aponte para o resíduo e identifique na hora</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+
         {/*botão pesquisa inicio*/}
 
         <View style={styles.search}>
@@ -125,43 +149,43 @@ export default function ReciclagemScreen({ navigation, route }) {
 
         <View style={styles.grid}>
 
-  {botoesFiltrados.map((botao) => {
+          {botoesFiltrados.map((botao) => {
 
-    const selecionado = materialSelecionado === botao.id;
+            const selecionado = materialSelecionado === botao.id;
 
-    return (
-      <TouchableOpacity
-        key={botao.id}
-        style={[
-          styles.materialButton,
-          selecionado && styles.materialButtonSelecionado,
-        ]}
-        onPress={() => setMaterialSelecionado(botao.id)}
-      >
+            return (
+              <TouchableOpacity
+                key={botao.id}
+                style={[
+                  styles.materialButton,
+                  selecionado && styles.materialButtonSelecionado,
+                ]}
+                onPress={() => setMaterialSelecionado(botao.id)}
+              >
 
-        <Image
-          source={selecionado ? botao.iconeSelecionado : botao.icone}
-          style={{
-            width: 42,
-            height: 42,
-          }}
-          resizeMode="contain"
-        />
+                <Image
+                  source={selecionado ? botao.iconeSelecionado : botao.icone}
+                  style={{
+                    width: 42,
+                    height: 42,
+                  }}
+                  resizeMode="contain"
+                />
 
                 <Text
-          style={[
-            styles.buttonText,
-            selecionado && styles.buttonTextSelecionado,
-          ]}
-        >
-          {botao.nome}
-        </Text>
+                  style={[
+                    styles.buttonText,
+                    selecionado && styles.buttonTextSelecionado,
+                  ]}
+                >
+                  {botao.nome}
+                </Text>
 
-      </TouchableOpacity>
-    );
-  })}
+              </TouchableOpacity>
+            );
+          })}
 
-</View>
+        </View>
 
 
         {/* container caso nenhum materal seja selecionado*/}
@@ -185,7 +209,10 @@ export default function ReciclagemScreen({ navigation, route }) {
         ) : (
 
           // MATERIAL SELECIONADO
+          // o key recria a tela a cada material, então o vídeo volta a
+          // mostrar a miniatura e só toca quando a pessoa der play
           <MaterialScreen
+            key={materialSelecionado}
             material={materiais[materialSelecionado]}
           />
 
@@ -195,40 +222,9 @@ export default function ReciclagemScreen({ navigation, route }) {
       {/* container fim*/}
 
       {/* MENU INFERIOR */}
-        <BottomTabBar active="reciclagem" navigation={navigation} />
+      <BottomTabBar active="reciclagem" navigation={navigation} />
 
     </View>
-  );
-}
-
-
-/* BOTÃO DO MENU INFERIOR */
-
-function BottomButton({
-  icon,
-  text,
-  active = false,
-}) {
-
-  return (
-    <TouchableOpacity style={styles.bottomButton}>
-
-      <MaterialCommunityIcons
-        name={icon}
-        size={31}
-        color="#55A653"
-      />
-
-      <Text
-        style={[
-          styles.bottomText,
-          active && styles.bottomTextActive,
-        ]}
-      >
-        {text}
-      </Text>
-
-    </TouchableOpacity>
   );
 }
 
@@ -240,42 +236,51 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9EF",
   },
 
-  header: {
-    height: 80,
-    backgroundColor: '#087C20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  logoContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 25,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  logoCircle: {
-    marginTop: 15,
-
-    width: 65,
-    height: 65,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoImage: {
-    width: 60,
-    height: 60,
-    resizeMode: "contain"
-  },
-
   scroll: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 110,
+    paddingBottom: 20,
   },
+
+
+  /* ================= BOTÃO ESCANEAR ================= */
+
+  scanWrapper: {
+    marginBottom: 16,
+  },
+
+  scanGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 28,
+  },
+
+  scanIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 16,
+  },
+
+  scanTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+
+  scanSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 2,
+  },
+
+
+  /* ================= PESQUISA ================= */
 
   search: {
     height: 50,
@@ -301,6 +306,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: "#333333",
   },
+
+
+  /* ================= MATERIAIS ================= */
 
   grid: {
     flexDirection: "row",
@@ -332,6 +340,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  buttonTextSelecionado: {
+    color: '#FFFFFF',
+  },
+
   fakeContent: {
     marginTop: 35,
     padding: 20,
@@ -348,69 +360,8 @@ const styles = StyleSheet.create({
 
   fakeDescription: {
     fontSize: 14,
-    lineHeight: 21,
-    color: "#888888",
-  },
-
-  materialIcon: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-  },
-
-  bottomMenu: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 82,
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
-  },
-
-  bottomButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "25%",
-  },
-
-  bottomText: {
-    fontSize: 12,
-    color: "#55A653",
-    marginTop: 2,
-  },
-  
-   buttonTextSelecionado: {
-    color: '#FFFFFF',
-  },
-
-  bottomTextActive: {
-    fontWeight: "600",
-  },
-  bottomMenu: {
-    height: 70,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#DDDDDD',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-
-  menuItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  menuText: {
-    color: '#55A951',
-    fontSize: 11,
-    marginTop: 2,
+    lineHeight: 19,
+    color: "#8B8B8B",
   },
 
 });

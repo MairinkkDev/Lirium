@@ -276,27 +276,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </TouchableOpacity>
 
-
-          {/*CAMERA */}
-
-        
-
         </View>
-
-        <Text style={styles.infoTitle}>
-          Detecte o material reciclável
-        </Text>
-
-          <TouchableOpacity style={styles.infoButton} onPress={() => navigation.navigate('TelaCamera')}>
-
-              <View style={styles.containerCamera}>
-
-                <View style={styles.infoButton}>
-                  <EvilIcons name="camera" size={120} color="#49A84B" />
-                </View>
-              </View>
-
-          </TouchableOpacity>
 
       </ScrollView>
 

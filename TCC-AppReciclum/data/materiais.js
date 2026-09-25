@@ -85,7 +85,7 @@ export const materiais = {
   pilhas: {
     nome: "Pilhas e baterias",
     subtitulo: "Descarte especial",
-    categoria: "Vermelha · Especial",
+    categoria: "Laranja · Especial",
 
     descarte: "Não descarte no lixo comum",
 
