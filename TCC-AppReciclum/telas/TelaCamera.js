@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
+
 import {
     View,
     Text,
@@ -8,246 +9,658 @@ import {
     ActivityIndicator,
     StatusBar,
     SafeAreaView,
+    Alert,
 } from 'react-native';
 
 import { CameraView, useCameraPermissions } from 'expo-camera';
+
 import * as ImagePicker from 'expo-image-picker';
+
+import { fetch as expoFetch } from 'expo/fetch';
+
+import { File } from 'expo-file-system';
+
 import { Ionicons } from '@expo/vector-icons';
+
+
+// ============================================================
+// ENDEREÇO DO FASTAPI
+// ============================================================
+
+const API_URL = 'http://192.168.1.79:8000';
+
 
 export default function TelaCamera({ navigation }) {
 
-    const [permission, requestPermission] = useCameraPermissions();
+    const [permission, requestPermission] =
+        useCameraPermissions();
 
-    // Guarda a imagem escolhida ou tirada
+    // Guarda a imagem tirada/escolhida
     const [imagem, setImagem] = useState(null);
 
-    // Evita toque duplo enquanto a foto é tirada
-    const [tirandoFoto, setTirandoFoto] = useState(false);
+    // Evita tirar duas fotos ao mesmo tempo
+    const [tirandoFoto, setTirandoFoto] =
+        useState(false);
+
+    // Indica que o YOLO está analisando
+    const [analisando, setAnalisando] =
+        useState(false);
 
     const cameraRef = useRef(null);
 
-    // ============================
-    // ABRIR GALERIA
-    // ============================
-    const abrirGaleria = useCallback(async () => {
+
+    // ============================================================
+    // ENVIAR IMAGEM PARA O FASTAPI / YOLO
+    // ============================================================
+
+    const enviarImagem = useCallback(async (uri) => {
 
         try {
-            const resultado = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
 
-            if (!resultado.canceled) {
-                setImagem(resultado.assets[0].uri);
+            setAnalisando(true);
+
+
+            // Cria o arquivo a partir da URI
+            const arquivo = new File(uri);
+
+
+            console.log('Arquivo:', arquivo.name);
+
+            console.log(
+                'Tamanho:',
+                arquivo.size,
+                'bytes'
+            );
+
+            console.log(
+                'Tipo:',
+                arquivo.type
+            );
+
+
+            // Cria o formulário
+            const formData = new FormData();
+
+
+            // Coloca a imagem dentro do formulário
+            formData.append('file', arquivo);
+
+
+            console.log(
+                'Enviando imagem para a API...'
+            );
+
+
+            // Envia para o FastAPI
+            const resposta = await expoFetch(
+                `${API_URL}/detectar`,
+                {
+                    method: 'POST',
+                    body: formData,
+                }
+            );
+
+
+            console.log(
+                'Status da API:',
+                resposta.status
+            );
+
+
+            // Transforma a resposta em JSON
+            const resultado =
+                await resposta.json();
+
+
+            console.log(
+                'Resposta da API:',
+                resultado
+            );
+
+
+            // ====================================================
+            // MOSTRAR RESULTADO
+            // ====================================================
+
+            if (
+                resultado.objetos &&
+                resultado.objetos.length > 0
+            ) {
+
+                // Pega somente os nomes
+                const nomes =
+                    resultado.objetos
+                        .map(objeto => objeto.nome)
+                        .join('\n');
+
+
+                Alert.alert(
+                    'Resultado',
+                    `Objeto detectado:\n\n${nomes}`,
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => navigation.goBack(),
+                        },
+                    ]
+                );
+
+            } else {
+
+                Alert.alert(
+                    'Resultado',
+                    'Nenhum objeto foi detectado.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => navigation.goBack(),
+                        },
+                    ]
+                );
+
             }
+
+
         } catch (erro) {
-            console.warn('Não foi possível abrir a galeria:', erro);
+
+            console.log(
+                'Erro ao enviar imagem:',
+                erro
+            );
+
+
+            Alert.alert(
+                'Erro',
+                'Não foi possível enviar a imagem para a API.'
+            );
+
+
+        } finally {
+
+            setAnalisando(false);
+
         }
 
     }, []);
 
-    // ============================
-    // TIRAR FOTO
-    // ============================
-    const tirarFoto = useCallback(async () => {
 
-        if (!cameraRef.current || tirandoFoto) {
-            return;
-        }
+    // ============================================================
+    // ABRIR GALERIA
+    // ============================================================
+
+    const abrirGaleria = useCallback(async () => {
 
         try {
+
+            const resultado =
+                await ImagePicker.launchImageLibraryAsync({
+
+                    mediaTypes: ['images'],
+
+                    allowsEditing: true,
+
+                    aspect: [4, 3],
+
+                    quality: 1,
+
+                });
+
+
+            if (!resultado.canceled) {
+
+                const uri =
+                    resultado.assets[0].uri;
+
+
+                // Mostra a imagem para confirmação
+                setImagem(uri);
+
+            }
+
+
+        } catch (erro) {
+
+            console.warn(
+                'Não foi possível abrir a galeria:',
+                erro
+            );
+
+        }
+
+    }, []);
+
+
+    // ============================================================
+    // TIRAR FOTO
+    // ============================================================
+
+    const tirarFoto = useCallback(async () => {
+
+        if (
+            !cameraRef.current ||
+            tirandoFoto
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
             setTirandoFoto(true);
 
-            const foto = await cameraRef.current.takePictureAsync();
 
+            const foto =
+                await cameraRef.current
+                    .takePictureAsync();
+
+
+            // Mostra a foto para confirmação
             setImagem(foto.uri);
+
+
         } catch (erro) {
-            console.warn('Não foi possível tirar a foto:', erro);
+
+            console.warn(
+                'Não foi possível tirar a foto:',
+                erro
+            );
+
         } finally {
+
             setTirandoFoto(false);
+
         }
 
     }, [tirandoFoto]);
 
-    // ============================
+
+    // ============================================================
     // NOVA FOTO
-    // ============================
+    // ============================================================
+
     const tirarOutraFoto = useCallback(() => {
+
         setImagem(null);
+
     }, []);
 
-    // ============================
+
+    // ============================================================
+    // USAR FOTO
+    // ============================================================
+
+    const usarFoto = useCallback(async () => {
+
+        if (!imagem || analisando) {
+
+            return;
+
+        }
+
+
+        await enviarImagem(imagem);
+
+    }, [
+        imagem,
+        analisando,
+        enviarImagem,
+    ]);
+
+
+    // ============================================================
     // PERMISSÃO DA CÂMERA
-    // ============================
+    // ============================================================
+
     if (!permission) {
-        return <View style={styles.container} />;
+
+        return (
+            <View style={styles.container} />
+        );
+
     }
+
 
     if (!permission.granted) {
 
         return (
-            <SafeAreaView style={styles.containerPermissao}>
 
-                <StatusBar barStyle="light-content" />
+            <SafeAreaView
+                style={styles.containerPermissao}
+            >
+
+                <StatusBar
+                    barStyle="light-content"
+                />
+
 
                 <View style={styles.iconePermissao}>
-                    <Ionicons name="camera-outline" size={48} color="#7CD37E" />
+
+                    <Ionicons
+                        name="camera-outline"
+                        size={48}
+                        color="#7CD37E"
+                    />
+
                 </View>
 
-                <Text style={styles.tituloPermissao}>
+
+                <Text
+                    style={styles.tituloPermissao}
+                >
                     Precisamos da câmera
                 </Text>
 
+
                 <Text style={styles.texto}>
-                    Para escanear o resíduo e identificar o material,
-                    permita o acesso à câmera do aparelho.
+
+                    Para escanear o resíduo e
+                    identificar o material,
+                    permita o acesso à câmera
+                    do aparelho.
+
                 </Text>
+
 
                 <TouchableOpacity
                     style={styles.botao}
                     onPress={requestPermission}
                     activeOpacity={0.85}
                 >
-                    <Text style={styles.textoBotao}>
+
+                    <Text
+                        style={styles.textoBotao}
+                    >
                         Permitir câmera
                     </Text>
+
                 </TouchableOpacity>
 
             </SafeAreaView>
+
         );
+
     }
 
-    // ============================
+
+    // ============================================================
     // TELA PRINCIPAL
-    // ============================
+    // ============================================================
+
     return (
+
         <View style={styles.container}>
 
-            <StatusBar barStyle="light-content" />
 
-            {/* =========================
+            <StatusBar
+                barStyle="light-content"
+            />
+
+
+            {/* =================================================
                 TOPO
-            ========================== */}
+            ================================================== */}
 
-            <SafeAreaView style={styles.topoSafe} pointerEvents="box-none">
+            <SafeAreaView
+                style={styles.topoSafe}
+                pointerEvents="box-none"
+            >
+
                 <View style={styles.topo}>
+
 
                     <TouchableOpacity
                         style={styles.botaoTopo}
-                        onPress={() => navigation.goBack()}
+                        onPress={() =>
+                            navigation.goBack()
+                        }
                         activeOpacity={0.85}
                     >
-                        <Ionicons name="close" size={24} color="#FFFFFF" />
+
+                        <Ionicons
+                            name="close"
+                            size={24}
+                            color="#FFFFFF"
+                        />
+
                     </TouchableOpacity>
 
-                    <Text style={styles.tituloTopo}>
-                        {imagem ? 'Confirme a foto' : 'Aponte para o resíduo'}
+
+                    <Text
+                        style={styles.tituloTopo}
+                    >
+
+                        {imagem
+                            ? 'Confirme a foto'
+                            : 'Aponte para o resíduo'
+                        }
+
                     </Text>
 
-                    <View style={styles.botaoTopo} />
+
+                    <View
+                        style={styles.botaoTopo}
+                    />
 
                 </View>
+
             </SafeAreaView>
 
-            {/* =========================
-                SE NÃO TIVER IMAGEM
-            ========================== */}
+
+            {/* =================================================
+                CÂMERA
+            ================================================== */}
 
             {!imagem && (
-                <View style={styles.molduraCamera}>
+
+                <View
+                    style={styles.molduraCamera}
+                >
+
                     <CameraView
                         ref={cameraRef}
                         style={styles.camera}
                         facing="back"
                     />
 
-                    <View style={styles.miraContainer} pointerEvents="none">
-                        <View style={styles.mira} />
-                        <Text style={styles.dicaTexto}>
-                            Centralize o item na moldura
+
+                    <View
+                        style={styles.miraContainer}
+                        pointerEvents="none"
+                    >
+
+                        <View
+                            style={styles.mira}
+                        />
+
+
+                        <Text
+                            style={styles.dicaTexto}
+                        >
+
+                            Centralize o item
+                            na moldura
+
                         </Text>
+
                     </View>
+
                 </View>
+
             )}
 
-            {/* =========================
-                SE TIVER IMAGEM
-            ========================== */}
+
+            {/* =================================================
+                IMAGEM
+            ================================================== */}
 
             {imagem && (
+
                 <Image
                     source={{ uri: imagem }}
                     style={styles.imagem}
                 />
+
             )}
 
-            {/* =========================
-                BOTÕES
-            ========================== */}
 
-            <SafeAreaView style={styles.areaBotoesSafe}>
+            {/* =================================================
+                BOTÕES
+            ================================================== */}
+
+            <SafeAreaView
+                style={styles.areaBotoesSafe}
+            >
+
 
                 {!imagem ? (
 
-                    <View style={styles.barraInferior}>
+                    <View
+                        style={styles.barraInferior}
+                    >
+
 
                         {/* GALERIA */}
+
                         <TouchableOpacity
                             style={styles.botaoGaleria}
                             onPress={abrirGaleria}
                             activeOpacity={0.8}
                         >
-                            <Ionicons name="images-outline" size={24} color="#FFFFFF" />
-                            <Text style={styles.textoBotaoSecundario}>
+
+                            <Ionicons
+                                name="images-outline"
+                                size={24}
+                                color="#FFFFFF"
+                            />
+
+
+                            <Text
+                                style={
+                                    styles.textoBotaoSecundario
+                                }
+                            >
+
                                 Galeria
+
                             </Text>
+
                         </TouchableOpacity>
 
+
                         {/* CÂMERA */}
+
                         <TouchableOpacity
                             style={styles.botaoFoto}
                             onPress={tirarFoto}
                             activeOpacity={0.85}
                             disabled={tirandoFoto}
                         >
+
                             {tirandoFoto ? (
-                                <ActivityIndicator color="#0A8443" />
+
+                                <ActivityIndicator
+                                    color="#0A8443"
+                                />
+
                             ) : (
-                                <View style={styles.circulo} />
+
+                                <View
+                                    style={styles.circulo}
+                                />
+
                             )}
+
                         </TouchableOpacity>
 
-                        {/* espaço vazio para manter o botão de foto centralizado */}
-                        <View style={styles.espacoLateral} />
+
+                        <View
+                            style={styles.espacoLateral}
+                        />
 
                     </View>
 
+
                 ) : (
 
-                    <View style={styles.barraConfirmacao}>
+
+                    <View
+                        style={styles.barraConfirmacao}
+                    >
+
+
+                        {/* OUTRA FOTO */}
 
                         <TouchableOpacity
                             style={styles.botaoOutraFoto}
                             onPress={tirarOutraFoto}
                             activeOpacity={0.85}
+                            disabled={analisando}
                         >
-                            <Ionicons name="camera-reverse-outline" size={20} color="#FFFFFF" />
-                            <Text style={styles.textoBotaoSecundario}>
+
+                            <Ionicons
+                                name="camera-reverse-outline"
+                                size={20}
+                                color="#FFFFFF"
+                            />
+
+
+                            <Text
+                                style={
+                                    styles.textoBotaoSecundario
+                                }
+                            >
+
                                 Outra foto
+
                             </Text>
+
                         </TouchableOpacity>
+
+
+                        {/* USAR FOTO */}
 
                         <TouchableOpacity
                             style={styles.botaoUsarFoto}
+                            onPress={usarFoto}
                             activeOpacity={0.85}
+                            disabled={analisando}
                         >
-                            <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                            <Text style={styles.textoBotao}>
-                                Usar foto
-                            </Text>
+
+                            {analisando ? (
+
+                                <ActivityIndicator
+                                    color="#FFFFFF"
+                                />
+
+                            ) : (
+
+                                <>
+
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={20}
+                                        color="#FFFFFF"
+                                    />
+
+
+                                    <Text
+                                        style={
+                                            styles.textoBotao
+                                        }
+                                    >
+
+                                        Usar foto
+
+                                    </Text>
+
+                                </>
+
+                            )}
+
                         </TouchableOpacity>
+
 
                     </View>
 
@@ -256,13 +669,15 @@ export default function TelaCamera({ navigation }) {
             </SafeAreaView>
 
         </View>
+
     );
+
 }
 
 
-// ============================
+// ============================================================
 // ESTILOS
-// ============================
+// ============================================================
 
 const styles = StyleSheet.create({
 
@@ -286,7 +701,8 @@ const styles = StyleSheet.create({
         width: 84,
         height: 84,
         borderRadius: 42,
-        backgroundColor: 'rgba(124, 211, 126, 0.12)',
+        backgroundColor:
+            'rgba(124, 211, 126, 0.12)',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
@@ -345,7 +761,8 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor:
+            'rgba(0,0,0,0.45)',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -384,7 +801,8 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.75)',
+        borderColor:
+            'rgba(255,255,255,0.75)',
         borderStyle: 'dashed',
     },
 
@@ -392,7 +810,8 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.85)',
         fontSize: 12,
         marginTop: 14,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor:
+            'rgba(0,0,0,0.4)',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 14,
@@ -406,7 +825,7 @@ const styles = StyleSheet.create({
     },
 
 
-    /* ===== BOTÕES INFERIORES ===== */
+    /* ===== BOTÕES ===== */
 
     areaBotoesSafe: {
         position: 'absolute',
@@ -441,7 +860,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 4,
-        borderColor: 'rgba(255,255,255,0.35)',
+        borderColor:
+            'rgba(255,255,255,0.35)',
     },
 
     circulo: {
@@ -472,7 +892,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        backgroundColor:
+            'rgba(255,255,255,0.15)',
         paddingVertical: 14,
         borderRadius: 30,
     },
