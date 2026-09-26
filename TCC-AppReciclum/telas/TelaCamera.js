@@ -27,7 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 // ENDEREÇO DO FASTAPI
 // ============================================================
 
-const API_URL = 'http://192.168.1.79:8000';
+const API_URL = 'http://SEU_IP_LOCAL:8000';
 
 
 export default function TelaCamera({ navigation }) {
