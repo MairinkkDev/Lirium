@@ -35,29 +35,73 @@ export default function CadastroScreen({ navigation }) {
 
     setLoading(true);
 
-    const usuarioDados = {
-      nome: nome,
-      email: email,
-      senha: senha,
-  
+     setLoading(true);
+
+    const tarefaDados = {
+
+      titulo: tituloEdit,
+
+      descricao: descricaoEdit,
+
+      status: statusEdit,
+
+      prioridade: prioridadeEdit,
+
+      data_vencimento: dataVEdit,
+
     };
 
-    axios.post(API_Usuario, usuarioDados)
+
+    axios.put(
+      `${API_Tarefa}/${tarefaSelecionada.id}`,
+      tarefaDados
+    )
+
       .then((response) => {
-        Alert.alert('Sucesso', 'Contato enviado com sucesso!');
-        setNome('');
-        setEmail('');
-        setSenha('');
-       
+
+        Alert.alert(
+          'Sucesso',
+          'Tarefa alterada com sucesso!'
+        );
+
+        setEditar(false);
+
+        setTarefaSelecionada(null);
+
+        carregarTarefas();
+
       })
+
       .catch((err) => {
-        console.error("Erro na requisição POST Axios:", err);
-        Alert.alert('Erro', 'Não foi possível enviar o contato. Verifique a conexão.');
+
+        console.error(
+          "Erro na requisição PUT Axios:",
+          err
+        );
+
+        if (err.response) {
+
+          console.error(
+            "Resposta da API:",
+            err.response.data
+          );
+
+        }
+
+        Alert.alert(
+          'Erro',
+          'Não foi possível alterar a tarefa.'
+        );
+
       })
+
       .finally(() => {
-        setLoading(false);
+
+        setLoadingAlteracao(false);
+
       });
   };
+
 
   const handleVoltar = () => {
    
@@ -95,73 +139,55 @@ export default function CadastroScreen({ navigation }) {
             contentContainerStyle={styles.card}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>CADASTRO</Text>
+            <Text style={styles.title}>Edite seu Perfil</Text>
 
             
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="person-outline"
-                size={20}
-                color="#8a8a8a"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Nome:"
-                placeholderTextColor="#8a8a8a"
-                value={nome}
-                onChangeText={setNome}
+          <TextInput
+              style={styles.input}
+              placeholder="Titulo da Tarefa"
+              value={tituloEdit}
+              onChangeText={setTituloEdit}
+            />
 
-              />
-            </View>
 
-            
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#8a8a8a"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email:"
-                placeholderTextColor="#8a8a8a"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Descrição"
+              value={descricaoEdit}
+              onChangeText={setDescricaoEdit}
+            />
 
-           
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="location-outline"
-                size={20}
-                color="#8a8a8a"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Senha:"
-                placeholderTextColor="#8a8a8a"
-                value={senha}
-                onChangeText={setSenha}
-               secureTextEntry
-              />
-            </View>
 
-            
+            <TextInput
+              style={styles.input}
+              placeholder="Status: em_andamento"
+              value={statusEdit}
+              onChangeText={setStatusEdit}
+            />
+
+
+            <TextInput
+              style={styles.input}
+              placeholder="Prioridade"
+              value={prioridadeEdit}
+              onChangeText={setPrioridadeEdit}
+            />
+
+
+            <TextInput
+              style={styles.input}
+              placeholder="Data Final: AAAA-MM-DD"
+              value={dataVEdit}
+              onChangeText={setDataVEdit}
+            />
+
+
             <TouchableOpacity
-              style={styles.criarButton}
-              onPress={handleCriar}
-              activeOpacity={0.85}
+              style={styles.button}
+              onPress={atualizarTarefa}
+              disabled={loadingAlteracao}
             >
-              <Text style={styles.criarButtonText}>CRIAR</Text>
-            </TouchableOpacity>
 
-            
             <TouchableOpacity
               style={styles.backButton}
               onPress={handleVoltar}
