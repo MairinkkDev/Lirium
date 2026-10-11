@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   View,
@@ -10,52 +11,104 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image
+  Image,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-
-
-
+import axios from 'axios';
+import { useUsuario } from '../context/UsuarioContext';
+ 
+const API_Login = 'http://localhost:8000/api/usuarios/login';
+ 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
 
+  const { entrar } = useUsuario(); 
+ 
   const handleEntrar = () => {
-    
-    navigation.navigate('Home');
-  };
+    if (!email || !senha) {
+      Alert.alert('Atenção', 'Por favor, preencha o email e a senha.');
+      return;
+    }
+ 
+    setLoading(true);
+ 
+    const loginDados = {
+      emailUsuario: email,
+      senhaUsuario: senha,
+    };
+ 
+    axios
+      .post(API_Login, loginDados, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      })
 
+      .then((response) => {
+          return entrar(response.data.token, response.data.usuario);
+       })
+
+      .then((response) => {
+        
+        setSenha('');
+        navigation.navigate('Home');
+      })
+      
+      .catch((err) => {
+        console.error('Status:', err.response?.status);
+        console.error('Resposta:', JSON.stringify(err.response?.data, null, 2));
+ 
+        if (err.response?.status === 401) {
+         
+          Alert.alert(
+            'Erro',
+            err.response.data?.mensagem || 'Email ou senha incorretos.'
+          );
+        } else if (err.response?.status === 422) {
+          Alert.alert('Atenção', 'Verifique se o email e a senha estão corretos.');
+        } else {
+          Alert.alert('Erro', 'Não foi possível fazer o login. Verifique a conexão.');
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+ 
   const handleEsqueceuSenha = () => {
-    
     console.log('Esqueceu a senha');
   };
-
+ 
   const handleCadastro = () => {
-    navigation.navigate('Cadastro');
+    if (navigation) navigation.navigate('Cadastro');
   };
-
+ 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-
-      {/* fundo gradiente aqui*/}
+ 
+   
       <LinearGradient
         colors={['#0f5c2e', '#3fa63f']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        {/* logo  */}
-        <View style={styles.logoPlaceholder}>
+     
+        <View>
           <Image
             source={require('../assets/logo.png')}
             style={styles.logoImage}
           />
-        </View> 
+        </View>
       </LinearGradient>
-
-      
+ 
       <SafeAreaView style={styles.cardWrapper}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -66,11 +119,10 @@ export default function LoginScreen({ navigation }) {
             keyboardShouldPersistTaps="handled"
           >
             <Text style={styles.title}>LOGIN</Text>
-
-           
+ 
             <View style={styles.inputContainer}>
               <Ionicons
-                name="person-outline"
+                name="mail-outline"
                 size={20}
                 color="#8a8a8a"
                 style={styles.inputIcon}
@@ -85,8 +137,7 @@ export default function LoginScreen({ navigation }) {
                 keyboardType="email-address"
               />
             </View>
-
-            
+ 
             <View style={styles.inputContainer}>
               <Ionicons
                 name="lock-closed-outline"
@@ -103,25 +154,27 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry
               />
             </View>
-
-            
+ 
             <View style={styles.forgotPasswordRow}>
               <Text style={styles.forgotPasswordText}>Esqueceu a senha? </Text>
               <TouchableOpacity onPress={handleEsqueceuSenha}>
                 <Text style={styles.forgotPasswordLink}>Clique aqui</Text>
               </TouchableOpacity>
             </View>
-
-            
+ 
             <TouchableOpacity
               style={styles.enterButton}
               onPress={handleEntrar}
               activeOpacity={0.85}
+              disabled={loading}
             >
-              <Text style={styles.enterButtonText}>ENTRAR</Text>
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.enterButtonText}>ENTRAR</Text>
+              )}
             </TouchableOpacity>
-
-           
+ 
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Não é cadastrado?</Text>
               <TouchableOpacity
@@ -138,7 +191,7 @@ export default function LoginScreen({ navigation }) {
     </View>
   );
 }
-
+ 
 const GREEN_DARK = '#0f5c2e';
 const GREEN_MAIN = '#3fa63f';
 const GREEN_LINK = '#2e8b57';
@@ -163,7 +216,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     flex: 1,
-    marginTop: -30, // faz o card subir
+    marginTop: -30, 
   },
   card: {
     flexGrow: 1,

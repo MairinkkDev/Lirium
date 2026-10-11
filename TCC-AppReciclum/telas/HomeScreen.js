@@ -244,7 +244,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.infoContainer}>
 
           {/* EVENTOS */}
-          <TouchableOpacity style={styles.infoButton}>
+          <TouchableOpacity style={styles.infoButton} onPress={() => navigation.navigate('Evento')}>
 
             <View style={styles.infoButtonE}>
               <MaterialCommunityIcons

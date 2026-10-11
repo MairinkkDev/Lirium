@@ -17,16 +17,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
-const API_Usuario = 'http://localhost:8000/api/usuario'; 
+const API_Usuario = 'http://localhost:8000/api/usuarios'; 
 
 
 export default function CadastroScreen({ navigation }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState('');
 
 
-  const handleEnviar = () => {
+  const handleCriar = () => {
 
   if (!nome || !email || !senha ) {
       Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
@@ -36,9 +37,10 @@ export default function CadastroScreen({ navigation }) {
     setLoading(true);
 
     const usuarioDados = {
-      nome: nome,
-      email: email,
-      senha: senha,
+      nomeUsuario: nome,
+      emailUsuario: email,
+      senhaUsuario: senha,
+      statusUsuario: 'ativo',
   
     };
 
@@ -118,7 +120,7 @@ export default function CadastroScreen({ navigation }) {
             
             <View style={styles.inputContainer}>
               <Ionicons
-                name="lock-closed-outline"
+                name="person-outline"
                 size={20}
                 color="#8a8a8a"
                 style={styles.inputIcon}
@@ -137,7 +139,7 @@ export default function CadastroScreen({ navigation }) {
            
             <View style={styles.inputContainer}>
               <Ionicons
-                name="location-outline"
+                name="lock-closed-outline"
                 size={20}
                 color="#8a8a8a"
                 style={styles.inputIcon}

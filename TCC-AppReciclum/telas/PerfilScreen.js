@@ -13,45 +13,26 @@ import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './components/AppHeader';
 import BottomTabBar from './components/BottomTabBar';
+import { useUsuario } from '../context/UsuarioContext'; 
 
 // depois inserir dados da API 
-const USER = {
-  iniciais: 'JV',
-  nome: 'João Vitor',
-  local: 'São Paulo, SP',
-  membroDesde: 'Membro desde março de 2024',
-};
+
+function gerarIniciais(nome) {
+  if (!nome) return '?';
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0][0];
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+  return (primeira + ultima).toUpperCase();
+}
 
 const DENUNCIAS_COUNT = 7;
 
 export default function HomeScreen({ navigation }) {
-  const menuItems = [
-    {
-      key: 'dashboard',
-      label: 'Dashboard',
-      icon: 'bar-chart-outline',
-      onPress: () => console.log('navegar para Dashboard'),
-    },
-    {
-      key: 'ecopontos',
-      label: 'Gerenciar Ecopontos',
-      icon: 'checkmark-circle-outline',
-      onPress: () => navigation && navigation.navigate('GerenciarEcopontos'),
-    },
-    {
-      key: 'denuncias',
-      label: 'Denúncias',
-      icon: 'person-outline',
-      badge: DENUNCIAS_COUNT,
-     onPress: () => navigation && navigation.navigate('Denuncias'),
-    },
-    {
-      key: 'cadastrar',
-      label: 'Cadastrar ecoponto',
-      icon: 'checkmark-circle-outline',
-      onPress: () => navigation && navigation.navigate('CadastrarEcoponto'),
-    },
-  ];
+
+  const { usuario } = useUsuario();
+  const nome = usuario?.nomeUsuario ?? 'Usuário';
+  const iniciais = gerarIniciais(usuario?.nomeUsuario);
+
 
   return (
     <View style={styles.container}>
@@ -71,47 +52,23 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}
           >
-            <TouchableOpacity style={styles.settingsButton} activeOpacity={0.8}>
-              <Ionicons name="settings-outline" size={16} color="#ffffff" />
-            </TouchableOpacity>
+            
 
             <View style={styles.profileRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{USER.iniciais}</Text>
-              </View>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{iniciais}</Text>
+               </View>
               <View>
-                <Text style={styles.userName}>{USER.nome}</Text>
-                <Text style={styles.userLocal}>{USER.local}</Text>
-              </View>
+                  <Text style={styles.userName}>{nome}</Text>
+               </View>
             </View>
 
-            <Text style={styles.memberSince}>{USER.membroDesde}</Text>
+            <TouchableOpacity  style={styles.settingsButton} activeOpacity={1} onPress={() => navigation.navigate('OpcoesPerfil')}>
+              <Ionicons name="settings-outline" size={28} color="#ffffff" />
+            </TouchableOpacity>
           </LinearGradient>
 
-          {/* Menu de opções */}
-          <View style={styles.menuList}>
-            {menuItems.map((item) => (
-              <TouchableOpacity
-                key={item.key}
-                style={styles.menuItem}
-                onPress={item.onPress}
-                activeOpacity={0.8}
-              >
-                <View style={styles.menuIconWrapper}>
-                  <Ionicons name={item.icon} size={18} color={GREEN_MAIN} />
-                </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-
-                {item.badge ? (
-                  <Text style={styles.menuBadge}>
-                    {String(item.badge).padStart(2, '0')}
-                  </Text>
-                ) : null}
-
-                <Ionicons name="chevron-forward" size={18} color={GRAY_TEXT} />
-              </TouchableOpacity>
-            ))}
-          </View>
+        
         </ScrollView>
 
         <BottomTabBar active="perfil" navigation={navigation} />
@@ -139,21 +96,22 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 22,
   },
-  settingsButton: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+settingsButton: {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  backgroundColor: 'rgba(255,255,255,0.2)',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
+
   },
   avatar: {
     width: 46,

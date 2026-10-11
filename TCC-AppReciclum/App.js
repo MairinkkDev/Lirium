@@ -3,6 +3,9 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import AvaliacaoEvento from './telas/AvaliacaoEvento';
+import OpcoesPerfilScreen from './telas/OpcoesPerfil';
+import EditarPerfilScreen from './telas/EditarPerfil';
 import LoginScreen from './telas/LoginScreen';
 import CadastroScreen from './telas/CadastroScreen';
 import HomeScreen from './telas/HomeScreen';
@@ -15,12 +18,15 @@ import ReciclagemScreen from './telas/ReciclagemScreen';
 import DashboardScreen from './telas/DashboardScreen';
 import TelaMapa from './telas/TelaMapa';
 import TelaCamera from './telas/TelaCamera';
+import { UsuarioProvider } from './context/UsuarioContext';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
+    <UsuarioProvider>
     <>
+
       <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator
@@ -39,8 +45,12 @@ export default function App() {
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
           <Stack.Screen name="TelaMapa" component={TelaMapa} />
           <Stack.Screen name="TelaCamera" component={TelaCamera} />
+          <Stack.Screen name="OpcoesPerfil" component={OpcoesPerfilScreen} />
+          <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} />
+          <Stack.Screen name="Evento" component={AvaliacaoEvento} />
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+      </>
+    </UsuarioProvider>
   );
 }

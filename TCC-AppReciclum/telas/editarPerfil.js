@@ -11,125 +11,121 @@ import {
   Platform,
   ScrollView,
   Image,
-  Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { useUsuario, API_URL } from '../context/UsuarioContext';
 
-const API_Usuario = 'http://localhost:8000/api/usuario'; 
+export default function EditarPerfilScreen({ navigation }) {
+  const { usuario, setUsuario } = useUsuario();
 
-
-export default function CadastroScreen({ navigation }) {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
+  const [nome, setNome] = useState(usuario?.nomeUsuario ?? '');
+  const [email, setEmail] = useState(usuario?.emailUsuario ?? '');
   const [senha, setSenha] = useState('');
 
-
-  const handleEnviar = () => {
-
-  if (!nome || !email || !senha ) {
-      Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
-      return;
-    }
-
-    setLoading(true);
-
-     setLoading(true);
-
-    const tarefaDados = {
-
-      titulo: tituloEdit,
-
-      descricao: descricaoEdit,
-
-      status: statusEdit,
-
-      prioridade: prioridadeEdit,
-
-      data_vencimento: dataVEdit,
-
-    };
+  const [editando, setEditando] = useState(false);     
+  const [confirmando, setConfirmando] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  const [mensagem, setMensagem] = useState(null);     
 
 
-    axios.put(
-      `${API_Tarefa}/${tarefaSelecionada.id}`,
-      tarefaDados
-    )
-
-      .then((response) => {
-
-        Alert.alert(
-          'Sucesso',
-          'Tarefa alterada com sucesso!'
-        );
-
-        setEditar(false);
-
-        setTarefaSelecionada(null);
-
-        carregarTarefas();
-
-      })
-
-      .catch((err) => {
-
-        console.error(
-          "Erro na requisição PUT Axios:",
-          err
-        );
-
-        if (err.response) {
-
-          console.error(
-            "Resposta da API:",
-            err.response.data
-          );
-
-        }
-
-        Alert.alert(
-          'Erro',
-          'Não foi possível alterar a tarefa.'
-        );
-
-      })
-
-      .finally(() => {
-
-        setLoadingAlteracao(false);
-
-      });
+  const handleAlterar = () => {
+    setMensagem(null);
+    setEditando(true);
   };
 
 
+  const handleCancelar = () => {
+    setNome(usuario?.nomeUsuario ?? '');
+    setEmail(usuario?.emailUsuario ?? '');
+    setSenha('');
+    setMensagem(null);
+    setEditando(false);
+  };
+
+  const handleSalvar = () => {
+    if (!nome || !email) {
+      setMensagem({ texto: 'Preencha o nome e o e-mail.', ok: false });
+      return;
+    }
+    setMensagem(null);
+    setConfirmando(true);
+  };
+
+  // botão CONFIRMAR do modal: envia para a API
+  const confirmarSalvar = () => {
+    setConfirmando(false);
+    setLoading(true);
+
+    const dados = {
+      nomeUsuario: nome,
+      emailUsuario: email,
+    };
+
+    // a senha só é enviada se a pessoa digitou uma nova
+    if (senha) {
+      dados.senhaUsuario = senha;
+    }
+
+
+    axios
+      .put(`${API_URL}/me`, dados)
+      .then((response) => {
+        setUsuario(response.data); 
+        setSenha('');
+        setEditando(false);
+        setMensagem({ texto: 'Perfil atualizado com sucesso.', ok: true });
+      })
+      .catch((err) => {
+        console.error('Erro:', err.message);
+        console.error('Status:', err.response?.status);
+        console.error('Resposta:', JSON.stringify(err.response?.data, null, 2));
+
+        if (err.response?.status === 401) {
+          setMensagem({ texto: 'Sessão expirada. Faça login novamente.', ok: false });
+        } else if (err.response?.status === 422) {
+          const erros = err.response.data?.errors;
+          const primeira = erros ? Object.values(erros)[0][0] : null;
+          setMensagem({ texto: primeira || 'Verifique os dados informados.', ok: false });
+        } else if (err.response) {
+          setMensagem({ texto: `Erro do servidor (${err.response.status}).`, ok: false });
+        } else if (err.code === 'ERR_NETWORK') {
+          setMensagem({ texto: 'Sem conexão com o servidor.', ok: false });
+        } else {
+          // erro dentro do app (não veio da API): mostra o motivo real
+          setMensagem({ texto: `Erro inesperado: ${err.message}`, ok: false });
+        }
+      })
+      .finally(() => {
+        setLoading(false)
+      });
+  };
+
   const handleVoltar = () => {
-   
     if (navigation) navigation.goBack();
-    console.log('Voltar');
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      
       <LinearGradient
         colors={['#0f5c2e', '#3fa63f']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-       
-        <View style={styles.logoPlaceholder}>
-         <Image
+        <View>
+          <Image
             source={require('../assets/logo.png')}
             style={styles.logoImage}
           />
         </View>
       </LinearGradient>
 
-     
       <SafeAreaView style={styles.cardWrapper}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -139,54 +135,101 @@ export default function CadastroScreen({ navigation }) {
             contentContainerStyle={styles.card}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>Edite seu Perfil</Text>
+            <Text style={styles.title}>EDITAR PERFIL</Text>
 
-            
-          <TextInput
-              style={styles.input}
-              placeholder="Titulo da Tarefa"
-              value={tituloEdit}
-              onChangeText={setTituloEdit}
-            />
+            <View style={[styles.inputContainer, !editando && styles.inputBloqueado]}>
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color="#8a8a8a"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nome:"
+                placeholderTextColor="#8a8a8a"
+                value={nome}
+                onChangeText={setNome}
+                editable={editando}
+              />
+            </View>
 
+            <View style={[styles.inputContainer, !editando && styles.inputBloqueado]}>
+              <Ionicons
+                name="mail-outline"
+                size={20}
+                color="#8a8a8a"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email:"
+                placeholderTextColor="#8a8a8a"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                editable={editando}
+              />
+            </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Descrição"
-              value={descricaoEdit}
-              onChangeText={setDescricaoEdit}
-            />
+            <View style={[styles.inputContainer, !editando && styles.inputBloqueado]}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color="#8a8a8a"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder={editando ? 'Nova senha (opcional):' : 'Senha: ••••••••'}
+                placeholderTextColor="#8a8a8a"
+                value={senha}
+                onChangeText={setSenha}
+                secureTextEntry
+                editable={editando}
+              />
+            </View>
 
+            {mensagem ? (
+              <Text style={[styles.mensagem, mensagem.ok ? styles.mensagemOk : styles.mensagemErro]}>
+                {mensagem.texto}
+              </Text>
+            ) : null}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Status: em_andamento"
-              value={statusEdit}
-              onChangeText={setStatusEdit}
-            />
+            {!editando ? (
+              <TouchableOpacity
+                style={styles.criarButton}
+                onPress={handleAlterar}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.criarButtonText}>ALTERAR</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.criarButton}
+                  onPress={handleSalvar}
+                  activeOpacity={0.85}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.criarButtonText}>SALVAR</Text>
+                  )}
+                </TouchableOpacity>
 
-
-            <TextInput
-              style={styles.input}
-              placeholder="Prioridade"
-              value={prioridadeEdit}
-              onChangeText={setPrioridadeEdit}
-            />
-
-
-            <TextInput
-              style={styles.input}
-              placeholder="Data Final: AAAA-MM-DD"
-              value={dataVEdit}
-              onChangeText={setDataVEdit}
-            />
-
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={atualizarTarefa}
-              disabled={loadingAlteracao}
-            >
+                <TouchableOpacity
+                  style={styles.cancelarButton}
+                  onPress={handleCancelar}
+                  activeOpacity={0.85}
+                  disabled={loading}
+                >
+                  <Text style={styles.cancelarButtonText}>CANCELAR</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             <TouchableOpacity
               style={styles.backButton}
@@ -198,6 +241,41 @@ export default function CadastroScreen({ navigation }) {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Modal de confirmação */}
+      <Modal
+        visible={confirmando}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmando(false)}
+      >
+        <View style={styles.modalFundo}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitulo}>Confirmar alterações</Text>
+            <Text style={styles.modalTexto}>
+              Deseja realmente salvar as alterações no seu perfil?
+            </Text>
+
+            <View style={styles.modalBotoes}>
+              <TouchableOpacity
+                style={[styles.modalBotao, styles.modalBotaoCancelar]}
+                onPress={() => setConfirmando(false)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalCancelarTexto}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBotao, styles.modalBotaoConfirmar]}
+                onPress={confirmarSalvar}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalConfirmarTexto}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -206,7 +284,6 @@ const GREEN_DARK = '#0f5c2e';
 const GREEN_MAIN = '#3fa63f';
 const GREEN_LIGHT = '#c9e8bd';
 const BG_CREAM = '#f5f4ea';
-const BORDER_BLUE = '#2b9fd6';
 const TAM_IMG = 90;
 const styles = StyleSheet.create({
   container: {
@@ -225,7 +302,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     flex: 1,
-    marginTop: -30, 
+    marginTop: -30,
   },
   card: {
     flexGrow: 1,
@@ -260,6 +337,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  inputBloqueado: {
+    backgroundColor: '#ebebe4', 
+  },
   inputIcon: {
     marginRight: 10,
   },
@@ -267,6 +347,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: '#333333',
+  },
+  mensagem: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  mensagemErro: {
+    color: '#c0392b',
+  },
+  mensagemOk: {
+    color: GREEN_MAIN,
   },
   criarButton: {
     width: '60%',
@@ -288,6 +380,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
   },
+  cancelarButton: {
+    width: '60%',
+    height: 40,
+    backgroundColor: GREEN_LIGHT,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  cancelarButtonText: {
+    color: GREEN_DARK,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -296,6 +403,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-start',
-    marginTop:10,
+    marginTop: 10,
+  },
+
+  // modal
+  modalFundo: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: BG_CREAM,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalTitulo: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: GREEN_DARK,
+    marginBottom: 10,
+  },
+  modalTexto: {
+    fontSize: 14,
+    color: '#333333',
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+  modalBotoes: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  modalBotao: {
+    flex: 1,
+    height: 40,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBotaoCancelar: {
+    backgroundColor: GREEN_LIGHT,
+    marginRight: 8,
+  },
+  modalBotaoConfirmar: {
+    backgroundColor: GREEN_MAIN,
+    marginLeft: 8,
+  },
+  modalCancelarTexto: {
+    color: GREEN_DARK,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalConfirmarTexto: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
