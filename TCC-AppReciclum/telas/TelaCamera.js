@@ -13,682 +13,403 @@ import {
 } from 'react-native';
 
 import { CameraView, useCameraPermissions } from 'expo-camera';
-
 import * as ImagePicker from 'expo-image-picker';
-
 import { fetch as expoFetch } from 'expo/fetch';
-
 import { File } from 'expo-file-system';
-
 import { Ionicons } from '@expo/vector-icons';
 
+const API_URL = 'http://SEU_IPI_LOCAL:8000';
 
-// ============================================================
-// ENDEREÇO DO FASTAPI
-// ============================================================
-
-const API_URL = 'http://SEU_IP_LOCAL:8000';
-
+const materiaisCompativeis = {
+    papelao: 'papelao',
+    garrafa_plastico: 'pet',
+    garrafa_vidro: 'vidro',
+    copo_vidro: 'vidro',
+    lata_metal: 'lata',
+    lata_alimento: 'lata',
+};
 
 export default function TelaCamera({ navigation }) {
-
-    const [permission, requestPermission] =
-        useCameraPermissions();
-
-    // Guarda a imagem tirada/escolhida
+    const [permission, requestPermission] = useCameraPermissions();
     const [imagem, setImagem] = useState(null);
-
-    // Evita tirar duas fotos ao mesmo tempo
-    const [tirandoFoto, setTirandoFoto] =
-        useState(false);
-
-    // Indica que o YOLO está analisando
-    const [analisando, setAnalisando] =
-        useState(false);
+    const [tirandoFoto, setTirandoFoto] = useState(false);
+    const [analisando, setAnalisando] = useState(false);
 
     const cameraRef = useRef(null);
 
-
-    // ============================================================
-    // ENVIAR IMAGEM PARA O FASTAPI / YOLO
-    // ============================================================
-
+    // Envia imagem para a fastapi para identificar o objeto
     const enviarImagem = useCallback(async (uri) => {
-
         try {
-
             setAnalisando(true);
 
-
-            // Cria o arquivo a partir da URI
             const arquivo = new File(uri);
-
-
-            console.log('Arquivo:', arquivo.name);
-
-            console.log(
-                'Tamanho:',
-                arquivo.size,
-                'bytes'
-            );
-
-            console.log(
-                'Tipo:',
-                arquivo.type
-            );
-
-
-            // Cria o formulário
             const formData = new FormData();
 
-
-            // Coloca a imagem dentro do formulário
             formData.append('file', arquivo);
 
+            const resposta = await expoFetch(`${API_URL}/detectar`, {
+                method: 'POST',
+                body: formData,
+            });
 
-            console.log(
-                'Enviando imagem para a API...'
-            );
+            const resultado = await resposta.json();
 
-
-            // Envia para o FastAPI
-            const resposta = await expoFetch(
-                `${API_URL}/detectar`,
-                {
-                    method: 'POST',
-                    body: formData,
-                }
-            );
-
-
-            console.log(
-                'Status da API:',
-                resposta.status
-            );
-
-
-            // Transforma a resposta em JSON
-            const resultado =
-                await resposta.json();
-
-
-            console.log(
-                'Resposta da API:',
-                resultado
-            );
-
-
-            // ====================================================
-            // MOSTRAR RESULTADO
-            // ====================================================
-
-            if (
-                resultado.objetos &&
-                resultado.objetos.length > 0
-            ) {
-
-                // Pega somente os nomes
-                const nomes =
-                    resultado.objetos
-                        .map(objeto => objeto.nome)
-                        .join('\n');
-
-
-                Alert.alert(
-                    'Resultado',
-                    `Objeto detectado:\n\n${nomes}`,
-                    [
-                        {
-                            text: 'OK',
-                            onPress: () => navigation.goBack(),
-                        },
-                    ]
+            if (!resposta.ok) {
+                throw new Error(
+                    resultado.detail || `Erro HTTP ${resposta.status}`
                 );
-
-            } else {
-
-                Alert.alert(
-                    'Resultado',
-                    'Nenhum objeto foi detectado.',
-                    [
-                        {
-                            text: 'OK',
-                            onPress: () => navigation.goBack(),
-                        },
-                    ]
-                );
-
             }
 
+            console.log('Resposta da API:', resultado);
 
+            // Aceita respostas com "objetos" ou "deteccoes".
+            const objetos = resultado.objetos || resultado.deteccoes || [];
+
+            // Procura o primeiro objeto com uma categoria compatível.
+            const objetoCompativel = objetos.find((objeto) => {
+                const nomeOriginal = objeto.nome ?? objeto.classe;
+
+                const nome = String(nomeOriginal || '')
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_');
+
+                return Boolean(materiaisCompativeis[nome]);
+            });
+
+            if (objetoCompativel) {
+                const nomeOriginal =
+                    objetoCompativel.nome ?? objetoCompativel.classe;
+
+                const nome = String(nomeOriginal)
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_');
+
+                const materialId = materiaisCompativeis[nome];
+
+                // Formata o nome para exibição no alerta.
+                const nomeExibicao = String(nomeOriginal)
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, (letra) => letra.toUpperCase());
+
+                console.log('Objeto reconhecido:', nome);
+                console.log('Categoria de reciclagem:', materialId);
+
+                // Mostra o objeto identificado antes de redirecionar para a tela com informações
+                Alert.alert(
+                    'Objeto identificado!',
+                    `Identificamos: ${nomeExibicao}.\n\nVamos mostrar as informações de reciclagem desse material.`,
+                    [
+                        {
+                            text: 'Continuar',
+                            onPress: () => {
+                                navigation.navigate('Reciclagem', {
+                                    materialId: materialId,
+                                });
+                            },
+                        },
+                    ],
+                    { cancelable: false }
+                );
+            } else {
+                Alert.alert(
+                    'Resultado da análise',
+                    objetos.length > 0
+                        ? 'A IA reconheceu um objeto, mas ainda não temos uma categoria de reciclagem correspondente.'
+                        : 'Nenhum objeto compatível foi detectado.',
+                    [
+                        {
+                            text: 'Tentar novamente',
+                            onPress: () => setImagem(null),
+                        },
+                        {
+                            text: 'Voltar',
+                            onPress: () => navigation.goBack(),
+                        },
+                    ]
+                );
+            }
         } catch (erro) {
-
-            console.log(
-                'Erro ao enviar imagem:',
-                erro
-            );
-
+            console.log('Erro ao enviar imagem:', erro);
 
             Alert.alert(
                 'Erro',
-                'Não foi possível enviar a imagem para a API.'
+                'Não foi possível enviar a imagem para a API. Verifique a conexão e o endereço do servidor.'
             );
-
-
         } finally {
-
             setAnalisando(false);
-
         }
+    }, [navigation]);
 
-    }, []);
-
-
-    // ============================================================
-    // ABRIR GALERIA
-    // ============================================================
-
+    // Abre a galeria
     const abrirGaleria = useCallback(async () => {
-
         try {
-
             const resultado =
                 await ImagePicker.launchImageLibraryAsync({
-
                     mediaTypes: ['images'],
-
                     allowsEditing: true,
-
                     aspect: [4, 3],
-
                     quality: 1,
-
                 });
 
-
-            if (!resultado.canceled) {
-
-                const uri =
-                    resultado.assets[0].uri;
-
-
-                // Mostra a imagem para confirmação
-                setImagem(uri);
-
+            if (
+                !resultado.canceled &&
+                resultado.assets?.length > 0
+            ) {
+                setImagem(resultado.assets[0].uri);
             }
-
-
         } catch (erro) {
+            console.warn('Erro ao abrir a galeria:', erro);
 
-            console.warn(
-                'Não foi possível abrir a galeria:',
-                erro
+            Alert.alert(
+                'Erro',
+                'Não foi possível abrir a galeria.'
             );
-
         }
-
     }, []);
 
-
-    // ============================================================
-    // TIRAR FOTO
-    // ============================================================
-
+    // Tirar foto
     const tirarFoto = useCallback(async () => {
-
-        if (
-            !cameraRef.current ||
-            tirandoFoto
-        ) {
-
+        if (!cameraRef.current || tirandoFoto) {
             return;
-
         }
-
 
         try {
-
             setTirandoFoto(true);
 
+            const foto = await cameraRef.current.takePictureAsync();
 
-            const foto =
-                await cameraRef.current
-                    .takePictureAsync();
-
-
-            // Mostra a foto para confirmação
-            setImagem(foto.uri);
-
-
+            if (foto?.uri) {
+                setImagem(foto.uri);
+            }
         } catch (erro) {
+            console.warn('Erro ao tirar foto:', erro);
 
-            console.warn(
-                'Não foi possível tirar a foto:',
-                erro
+            Alert.alert(
+                'Erro',
+                'Não foi possível tirar a foto.'
             );
-
         } finally {
-
             setTirandoFoto(false);
-
         }
-
     }, [tirandoFoto]);
 
-
-    // ============================================================
-    // NOVA FOTO
-    // ============================================================
-
+    // Tirar outra foto
     const tirarOutraFoto = useCallback(() => {
-
         setImagem(null);
-
     }, []);
 
-
-    // ============================================================
-    // USAR FOTO
-    // ============================================================
-
+    // Confirmação para o envio
     const usarFoto = useCallback(async () => {
-
         if (!imagem || analisando) {
-
             return;
-
         }
 
-
         await enviarImagem(imagem);
+    }, [imagem, analisando, enviarImagem]);
 
-    }, [
-        imagem,
-        analisando,
-        enviarImagem,
-    ]);
-
-
-    // ============================================================
-    // PERMISSÃO DA CÂMERA
-    // ============================================================
-
+    // carregamento da permissão
     if (!permission) {
-
-        return (
-            <View style={styles.container} />
-        );
-
+        return <View style={styles.container} />;
     }
 
-
+    // Pedir premissão da câmera
     if (!permission.granted) {
-
         return (
-
-            <SafeAreaView
-                style={styles.containerPermissao}
-            >
-
-                <StatusBar
-                    barStyle="light-content"
-                />
-
+            <SafeAreaView style={styles.containerPermissao}>
+                <StatusBar barStyle="light-content" />
 
                 <View style={styles.iconePermissao}>
-
                     <Ionicons
                         name="camera-outline"
                         size={48}
                         color="#7CD37E"
                     />
-
                 </View>
 
-
-                <Text
-                    style={styles.tituloPermissao}
-                >
+                <Text style={styles.tituloPermissao}>
                     Precisamos da câmera
                 </Text>
 
-
-                <Text style={styles.texto}>
-
-                    Para escanear o resíduo e
-                    identificar o material,
-                    permita o acesso à câmera
-                    do aparelho.
-
+                <Text style={styles.textoPermissao}>
+                    Para escanear o resíduo e identificar o material,
+                    permita o acesso à câmera do aparelho.
                 </Text>
 
-
                 <TouchableOpacity
-                    style={styles.botao}
+                    style={styles.botaoPermissao}
                     onPress={requestPermission}
                     activeOpacity={0.85}
                 >
-
-                    <Text
-                        style={styles.textoBotao}
-                    >
+                    <Text style={styles.textoBotao}>
                         Permitir câmera
                     </Text>
-
                 </TouchableOpacity>
-
             </SafeAreaView>
-
         );
-
     }
 
-
-    // ============================================================
-    // TELA PRINCIPAL
-    // ============================================================
-
+    // Tela principal
     return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="light-content" />
 
-        <View style={styles.container}>
-
-
-            <StatusBar
-                barStyle="light-content"
-            />
-
-
-            {/* =================================================
-                TOPO
-            ================================================== */}
-
-            <SafeAreaView
-                style={styles.topoSafe}
-                pointerEvents="box-none"
-            >
-
-                <View style={styles.topo}>
-
-
-                    <TouchableOpacity
-                        style={styles.botaoTopo}
-                        onPress={() =>
-                            navigation.goBack()
-                        }
-                        activeOpacity={0.85}
-                    >
-
-                        <Ionicons
-                            name="close"
-                            size={24}
-                            color="#FFFFFF"
-                        />
-
-                    </TouchableOpacity>
-
-
-                    <Text
-                        style={styles.tituloTopo}
-                    >
-
-                        {imagem
-                            ? 'Confirme a foto'
-                            : 'Aponte para o resíduo'
-                        }
-
-                    </Text>
-
-
-                    <View
-                        style={styles.botaoTopo}
-                    />
-
-                </View>
-
-            </SafeAreaView>
-
-
-            {/* =================================================
-                CÂMERA
-            ================================================== */}
-
-            {!imagem && (
-
-                <View
-                    style={styles.molduraCamera}
+            {/* CABEÇALHO */}
+            <View style={styles.topo}>
+                <TouchableOpacity
+                    style={styles.botaoTopo}
+                    onPress={() => navigation.goBack()}
+                    activeOpacity={0.85}
                 >
-
-                    <CameraView
-                        ref={cameraRef}
-                        style={styles.camera}
-                        facing="back"
+                    <Ionicons
+                        name="close"
+                        size={24}
+                        color="#FFFFFF"
                     />
+                </TouchableOpacity>
 
+                <Text style={styles.tituloTopo}>
+                    {imagem
+                        ? 'Confirme a foto'
+                        : 'Aponte para o resíduo'}
+                </Text>
 
-                    <View
-                        style={styles.miraContainer}
-                        pointerEvents="none"
-                    >
+                <View style={styles.botaoTopo} />
+            </View>
 
-                        <View
-                            style={styles.mira}
+            {/* ÁREA CENTRAL DA CÂMERA OU DA FOTO */}
+            <View style={styles.areaCentral}>
+                {!imagem ? (
+                    <View style={styles.cameraContainer}>
+                        <CameraView
+                            ref={cameraRef}
+                            style={StyleSheet.absoluteFill}
+                            facing="back"
                         />
 
-
-                        <Text
-                            style={styles.dicaTexto}
+                        {/* MIRA CENTRALIZADA */}
+                        <View
+                            style={styles.miraContainer}
+                            pointerEvents="none"
                         >
+                            <View style={styles.mira} />
 
-                            Centralize o item
-                            na moldura
-
-                        </Text>
-
+                            <Text style={styles.dicaTexto}>
+                                Centralize o item na mira
+                            </Text>
+                        </View>
                     </View>
+                ) : (
+                    <View style={styles.molduraImagem}>
+                        <Image
+                            source={{ uri: imagem }}
+                            style={styles.imagem}
+                            resizeMode="contain"
+                        />
+                    </View>
+                )}
+            </View>
 
-                </View>
-
-            )}
-
-
-            {/* =================================================
-                IMAGEM
-            ================================================== */}
-
-            {imagem && (
-
-                <Image
-                    source={{ uri: imagem }}
-                    style={styles.imagem}
-                />
-
-            )}
-
-
-            {/* =================================================
-                BOTÕES
-            ================================================== */}
-
-            <SafeAreaView
-                style={styles.areaBotoesSafe}
-            >
-
-
+            {/* BOTÕES INFERIORES */}
+            <View style={styles.areaBotoes}>
                 {!imagem ? (
-
-                    <View
-                        style={styles.barraInferior}
-                    >
-
-
-                        {/* GALERIA */}
-
+                    <View style={styles.barraInferior}>
                         <TouchableOpacity
                             style={styles.botaoGaleria}
                             onPress={abrirGaleria}
                             activeOpacity={0.8}
                         >
-
                             <Ionicons
                                 name="images-outline"
                                 size={24}
                                 color="#FFFFFF"
                             />
 
-
-                            <Text
-                                style={
-                                    styles.textoBotaoSecundario
-                                }
-                            >
-
+                            <Text style={styles.textoBotaoSecundario}>
                                 Galeria
-
                             </Text>
-
                         </TouchableOpacity>
-
-
-                        {/* CÂMERA */}
 
                         <TouchableOpacity
                             style={styles.botaoFoto}
                             onPress={tirarFoto}
                             activeOpacity={0.85}
-                            disabled={tirandoFoto}
+                            disabled={tirandoFoto || analisando}
                         >
-
                             {tirandoFoto ? (
-
-                                <ActivityIndicator
-                                    color="#0A8443"
-                                />
-
+                                <ActivityIndicator color="#0A8443" />
                             ) : (
-
-                                <View
-                                    style={styles.circulo}
-                                />
-
+                                <View style={styles.circulo} />
                             )}
-
                         </TouchableOpacity>
 
-
-                        <View
-                            style={styles.espacoLateral}
-                        />
-
+                        <View style={styles.espacoLateral} />
                     </View>
-
-
                 ) : (
-
-
-                    <View
-                        style={styles.barraConfirmacao}
-                    >
-
-
-                        {/* OUTRA FOTO */}
-
+                    <View style={styles.barraConfirmacao}>
                         <TouchableOpacity
                             style={styles.botaoOutraFoto}
                             onPress={tirarOutraFoto}
                             activeOpacity={0.85}
                             disabled={analisando}
                         >
-
                             <Ionicons
                                 name="camera-reverse-outline"
                                 size={20}
                                 color="#FFFFFF"
                             />
 
-
-                            <Text
-                                style={
-                                    styles.textoBotaoSecundario
-                                }
-                            >
-
+                            <Text style={styles.textoBotaoSecundario}>
                                 Outra foto
-
                             </Text>
-
                         </TouchableOpacity>
 
-
-                        {/* USAR FOTO */}
-
                         <TouchableOpacity
-                            style={styles.botaoUsarFoto}
+                            style={[
+                                styles.botaoUsarFoto,
+                                analisando && styles.botaoDesabilitado,
+                            ]}
                             onPress={usarFoto}
                             activeOpacity={0.85}
                             disabled={analisando}
                         >
-
                             {analisando ? (
-
-                                <ActivityIndicator
-                                    color="#FFFFFF"
-                                />
-
-                            ) : (
-
                                 <>
-
+                                    <ActivityIndicator color="#FFFFFF" />
+                                    <Text style={styles.textoBotao}>
+                                        Analisando...
+                                    </Text>
+                                </>
+                            ) : (
+                                <>
                                     <Ionicons
                                         name="checkmark"
                                         size={20}
                                         color="#FFFFFF"
                                     />
 
-
-                                    <Text
-                                        style={
-                                            styles.textoBotao
-                                        }
-                                    >
-
+                                    <Text style={styles.textoBotao}>
                                         Usar foto
-
                                     </Text>
-
                                 </>
-
                             )}
-
                         </TouchableOpacity>
-
-
                     </View>
-
                 )}
-
-            </SafeAreaView>
-
-        </View>
-
+            </View>
+        </SafeAreaView>
     );
-
 }
 
-
-// ============================================================
 // ESTILOS
-// ============================================================
-
 const styles = StyleSheet.create({
-
     container: {
         flex: 1,
         backgroundColor: '#0A0A0A',
     },
 
-
-    /* ===== PERMISSÃO ===== */
-
+    // PERMISSÕES
     containerPermissao: {
         flex: 1,
         backgroundColor: '#0A0A0A',
@@ -701,8 +422,7 @@ const styles = StyleSheet.create({
         width: 84,
         height: 84,
         borderRadius: 42,
-        backgroundColor:
-            'rgba(124, 211, 126, 0.12)',
+        backgroundColor: 'rgba(124, 211, 126, 0.12)',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 20,
@@ -715,7 +435,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 
-    texto: {
+    textoPermissao: {
         color: '#B5B5B5',
         textAlign: 'center',
         marginBottom: 28,
@@ -723,7 +443,7 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 
-    botao: {
+    botaoPermissao: {
         backgroundColor: '#0A8443',
         paddingVertical: 15,
         paddingHorizontal: 36,
@@ -731,63 +451,53 @@ const styles = StyleSheet.create({
     },
 
     textoBotao: {
-        color: '#fff',
+        color: '#FFFFFF',
         textAlign: 'center',
         fontSize: 15,
         fontWeight: '700',
         marginLeft: 6,
     },
 
-
-    /* ===== TOPO ===== */
-
-    topoSafe: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 2,
-    },
-
+    // CABEÇALHO
     topo: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 28,
+        paddingVertical: 10,
     },
 
     botaoTopo: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor:
-            'rgba(0,0,0,0.45)',
+        backgroundColor: 'rgba(255,255,255,0.10)',
         alignItems: 'center',
         justifyContent: 'center',
     },
 
     tituloTopo: {
+        flex: 1,
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '600',
+        textAlign: 'center',
+        marginHorizontal: 8,
     },
 
-
-    /* ===== CÂMERA ===== */
-
-    molduraCamera: {
+    // ÁREA CENTRAL
+    areaCentral: {
         flex: 1,
-        marginTop: 90,
-        marginHorizontal: 14,
-        marginBottom: 150,
-        borderRadius: 24,
+        minHeight: 0,
+        width: '100%',
+    },
+
+    cameraContainer: {
+        flex: 1,
+        width: '100%',
+        minHeight: 0,
         overflow: 'hidden',
-        backgroundColor: '#000',
-    },
-
-    camera: {
-        flex: 1,
+        backgroundColor: '#000000',
     },
 
     miraContainer: {
@@ -797,55 +507,61 @@ const styles = StyleSheet.create({
     },
 
     mira: {
-        width: '72%',
+        width: '80%',
+        top: '50%',
         aspectRatio: 1,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor:
-            'rgba(255,255,255,0.75)',
+        borderColor: 'rgba(255,255,255,0.85)',
         borderStyle: 'dashed',
     },
 
     dicaTexto: {
-        color: 'rgba(255,255,255,0.85)',
+        position: 'absolute',
+        top: '170%',
+        color: '#FFFFFF',
         fontSize: 12,
-        marginTop: 14,
-        backgroundColor:
-            'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.55)',
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingVertical: 7,
         borderRadius: 14,
         overflow: 'hidden',
+        textAlign: 'center',
+    },
+
+    molduraImagem: {
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+        backgroundColor: '#000000',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     imagem: {
-        flex: 1,
         width: '100%',
-        resizeMode: 'contain',
+        height: '100%',
     },
 
-
-    /* ===== BOTÕES ===== */
-
-    areaBotoesSafe: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
+    // BOTÕES INFERIORES
+    areaBotoes: {
+        paddingHorizontal: 20,
+        paddingTop: 8,
+        paddingBottom: 10,
     },
 
     barraInferior: {
+        minHeight: 82,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 30,
-        paddingBottom: 20,
-        paddingTop: 10,
+        paddingHorizontal: 10,
     },
 
     botaoGaleria: {
         width: 64,
         alignItems: 'center',
+        justifyContent: 'center',
     },
 
     espacoLateral: {
@@ -860,8 +576,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 4,
-        borderColor:
-            'rgba(255,255,255,0.35)',
+        borderColor: 'rgba(255,255,255,0.35)',
     },
 
     circulo: {
@@ -879,11 +594,10 @@ const styles = StyleSheet.create({
     },
 
     barraConfirmacao: {
+        minHeight: 82,
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingBottom: 24,
-        paddingTop: 10,
         gap: 12,
     },
 
@@ -892,10 +606,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor:
-            'rgba(255,255,255,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.15)',
         paddingVertical: 14,
         borderRadius: 30,
+        gap: 4,
     },
 
     botaoUsarFoto: {
@@ -906,6 +620,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#0A8443',
         paddingVertical: 14,
         borderRadius: 30,
+        gap: 4,
     },
 
+    botaoDesabilitado: {
+        opacity: 0.7,
+    },
 });

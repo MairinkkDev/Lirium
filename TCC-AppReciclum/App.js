@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import AvaliacaoEvento from './telas/AvaliacaoEvento';
 import OpcoesPerfilScreen from './telas/OpcoesPerfil';
-import EditarPerfilScreen from './telas/EditarPerfil';
+import EditarPerfilScreen from './telas/editarPerfil';
 import LoginScreen from './telas/LoginScreen';
 import CadastroScreen from './telas/CadastroScreen';
 import HomeScreen from './telas/HomeScreen';
