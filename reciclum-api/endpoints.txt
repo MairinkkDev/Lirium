@@ -1,0 +1,88 @@
+GET (método index) -> http://127.0.0.1:8000/api/usuarios
+http://127.0.0.1:8000/api/telefone-usuarios
+http://127.0.0.1:8000/api/administradores
+http://127.0.0.1:8000/api/instituicoes
+http://127.0.0.1:8000/api/telefone-instituicoes
+http://127.0.0.1:8000/api/endereco-instituicoes
+http://127.0.0.1:8000/api/categorias-publicacoes
+http://127.0.0.1:8000/api/publicacoes
+http://127.0.0.1:8000/api/imagens-publicacoes
+http://127.0.0.1:8000/api/ecopontos
+http://127.0.0.1:8000/api/materiais-reciclaveis
+http://127.0.0.1:8000/api/ecoponto-materiais
+http://127.0.0.1:8000/api/categorias-denuncias
+http://127.0.0.1:8000/api/denuncias
+http://127.0.0.1:8000/api/eventos
+http://127.0.0.1:8000/api/evento-instituicoes
+http://127.0.0.1:8000/api/evento-avaliacoes
+
+GET (método show) -> http://127.0.0.1:8000/api/usuarios/{id} -> substituir {id} por número
+http://127.0.0.1:8000/api/telefone-usuarios/{id}
+http://127.0.0.1:8000/api/administradores/{id}
+http://127.0.0.1:8000/api/instituicoes/{id}
+http://127.0.0.1:8000/api/telefone-instituicoes/{id}
+http://127.0.0.1:8000/api/endereco-instituicoes/{id}
+http://127.0.0.1:8000/api/categorias-publicacoes/{id}
+http://127.0.0.1:8000/api/publicacoes/{id}
+http://127.0.0.1:8000/api/imagens-publicacoes/{id}
+http://127.0.0.1:8000/api/ecopontos/{id}
+http://127.0.0.1:8000/api/materiais-reciclaveis/{id}
+http://127.0.0.1:8000/api/ecoponto-materiais/{id}
+http://127.0.0.1:8000/api/categorias-denuncias/{id}
+http://127.0.0.1:8000/api/denuncias/{id}
+http://127.0.0.1:8000/api/eventos/{id}
+http://127.0.0.1:8000/api/evento-instituicoes/{id}
+http://127.0.0.1:8000/api/evento-avaliacoes/{id}
+
+POST (método store) -> http://127.0.0.1:8000/api/usuarios
+Corpo do json: 
+
+{
+    "nomeUsuario": "Maria Silva",
+    "emailUsuario": "mariaaa@teste.com",
+    "senhaUsuario": "segredo123",
+    "statusUsuario": "ativo"
+}
+
+PUT (método update) -> http://127.0.0.1:8000/api/usuarios{id} -> substituir {id} por número
+
+{
+    "nomeUsuario": "MariaAAAAaa Silva",
+    "emailUsuario": "mariaaa@teste.com",
+    "senhaUsuario": "segredo123",
+    "statusUsuario": "ativo"
+}
+
+--- Login -> POST (método fazerLogin) -> http://127.0.0.1:8000/api/usuarios/login
+
+Header: Content-Type: application/json (TEM QUE TER ESSE HEADER SE NÃO NÃO FUNCIONA)
+
+Corpo:
+
+{
+    "emailUsuario": "usuario.generico01@exemplo.com",
+    "senhaUsuario": "password"
+}
+
+Sucesso vai tacar um código 200 e erro um 401
+
+
+DELETE (método destroy) -> http://127.0.0.1:8000/api/usuarios{id} -> substituir {id} por número
+
+http://127.0.0.1:8000/api/telefone-usuarios
+http://127.0.0.1:8000/api/administradores
+http://127.0.0.1:8000/api/instituicoes
+http://127.0.0.1:8000/api/telefone-instituicoes
+http://127.0.0.1:8000/api/endereco-instituicoes
+http://127.0.0.1:8000/api/categorias-publicacoes
+http://127.0.0.1:8000/api/publicacoes
+http://127.0.0.1:8000/api/imagens-publicacoes
+http://127.0.0.1:8000/api/ecopontos
+http://127.0.0.1:8000/api/materiais-reciclaveis
+http://127.0.0.1:8000/api/ecoponto-materiais
+http://127.0.0.1:8000/api/categorias-denuncias
+http://127.0.0.1:8000/api/denuncias
+http://127.0.0.1:8000/api/eventos
+http://127.0.0.1:8000/api/evento-instituicoes
+http://127.0.0.1:8000/api/evento-avaliacoes
+
