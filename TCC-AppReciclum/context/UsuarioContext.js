@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-export const API_URL = 'http://localhost:8000/api';
+export const API_URL = 'http://192.168.0.225:8000/api';
 const CHAVE_TOKEN = 'token';
 
 axios.defaults.headers.common.Accept = 'application/json';

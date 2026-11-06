@@ -16,8 +16,9 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { useUsuario, API_URL } from '../context/UsuarioContext';
 
-const API_Usuario = 'http://localhost:8000/api/usuarios';
+const API_Usuario = `${API_URL}/usuarios`;
 
 export default function CadastroScreen({ navigation }) {
   const [nome, setNome] = useState('');
