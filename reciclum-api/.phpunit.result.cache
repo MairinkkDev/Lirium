@@ -1,1 +1,0 @@
-{"version":2,"defects":{"Tests\\Feature\\EmailVerificationTest::test_user_cannot_login_before_email_verification":8,"Tests\\Feature\\EmailVerificationTest::test_email_verification_route_accepts_valid_signed_link":8},"times":{"Tests\\Unit\\ExampleTest::test_that_true_is_true":0.001,"Tests\\Feature\\ExampleTest::test_the_application_returns_a_successful_response":1.593}}
