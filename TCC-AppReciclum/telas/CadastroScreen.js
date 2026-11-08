@@ -17,7 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
-const API_Usuario = 'http://localhost:8000/api/usuarios';
+const API_Usuario = 'http://SEUIP:8000/api/usuarios'; 
+
 
 export default function CadastroScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -25,44 +26,48 @@ export default function CadastroScreen({ navigation }) {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
 
+
   const handleCriar = () => {
-    if (!nome || !email || !senha) {
+
+  if (!nome || !email || !senha ) {
       Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
       return;
     }
 
     setLoading(true);
 
-  const usuarioDados = {
-  nomeUsuario: nome,
-  emailUsuario: email,
-  senhaUsuario: senha,
-};
+    const usuarioDados = {
+      nomeUsuario: nome,
+      emailUsuario: email,
+      senhaUsuario: senha,
+      statusUsuario: 'ativo',
+  
+    };
 
-
-      axios.post(API_Usuario, usuarioDados, {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-
-      .then(() => {
-        Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
+    axios.post(API_Usuario, usuarioDados)
+      .then((response) => {
+        Alert.alert('Sucesso', 'Contato enviado com sucesso!');
         setNome('');
         setEmail('');
         setSenha('');
+       
       })
       .catch((err) => {
-        const resposta = err.response?.data;
-        console.error('Resposta do Laravel:', JSON.stringify(resposta, null, 2));
-        console.error('Status:', err.response?.status);
+    console.log('========== ERRO API ==========');
+    console.log('Mensagem:', err.message);
+    console.log('Código:', err.code);
+    console.log('Status:', err.response?.status);
+    console.log('Resposta:', err.response?.data);
+    console.log('URL:', err.config?.url);
+    console.log('Base URL:', err.config?.baseURL);
+    console.log('Requisição enviada:', !!err.request);
+    console.log('==============================');
 
-        const mensagem = resposta?.message || 'Não foi possível realizar o cadastro.';
-        const erros = resposta?.errors ? JSON.stringify(resposta.errors, null, 2) : '';
-
-        Alert.alert('Erro no cadastro', erros ? `${mensagem}\n\n${erros}` : mensagem);
-      })
+    Alert.alert(
+        'Erro no cadastro',
+        err.response?.data?.message || err.message || 'Não foi possível realizar o cadastro.'
+    );
+})
       .finally(() => {
         setLoading(false);
       });

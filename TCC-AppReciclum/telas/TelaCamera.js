@@ -18,7 +18,7 @@ import { fetch as expoFetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_URL = 'http://SEU_IPI_LOCAL:8000';
+const API_URL = 'http://SEUIP:8000';
 
 const materiaisCompativeis = {
     papelao: 'papelao',

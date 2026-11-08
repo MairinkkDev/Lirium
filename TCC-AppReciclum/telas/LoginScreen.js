@@ -18,85 +18,67 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { useUsuario, API_URL } from '../context/UsuarioContext';
-
-const API_Login = `${API_URL}/usuarios/login`;
-
+import { useUsuario } from '../context/UsuarioContext';
+ 
+const API_Login = 'http://SEUIP:8000/api/usuarios/login';
+ 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { entrar } = useUsuario();
-
-  const reenviarVerificacao = async () => {
-    try {
-      await axios.post(`${API_URL}/email/verification-notification`);
-      return true;
-    } catch (err) {
-      console.log('Falha ao reenviar verificação:', err.response?.data || err.message);
-      return false;
-    }
-  };
-
-  const handleEntrar = async () => {
+  const { entrar } = useUsuario(); 
+ 
+  const handleEntrar = () => {
     if (!email || !senha) {
       Alert.alert('Atenção', 'Por favor, preencha o email e a senha.');
       return;
     }
-
+ 
     setLoading(true);
-
+ 
     const loginDados = {
       emailUsuario: email,
       senhaUsuario: senha,
     };
-
-    try {
-      const response = await axios.post(API_Login, loginDados, {
+ 
+    axios
+      .post(API_Login, loginDados, {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
+      })
+
+      .then((response) => {
+          return entrar(response.data.token, response.data.usuario);
+       })
+
+      .then((response) => {
+        
+        setSenha('');
+        navigation.navigate('Home');
+      })
+      
+      .catch((err) => {
+        console.error('Status:', err.response?.status);
+        console.error('Resposta:', JSON.stringify(err.response?.data, null, 2));
+ 
+        if (err.response?.status === 401) {
+         
+          Alert.alert(
+            'Erro',
+            err.response.data?.mensagem || 'Email ou senha incorretos.'
+          );
+        } else if (err.response?.status === 422) {
+          Alert.alert('Atenção', 'Verifique se o email e a senha estão corretos.');
+        } else {
+          Alert.alert('Erro', 'Não foi possível fazer o login. Verifique a conexão.');
+        }
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      const token = response.data.token;
-      const usuario = response.data.usuario || response.data.user || response.data;
-      const emailVerificado = usuario?.email_verificado ?? response.data.email_verificado ?? false;
-
-      await entrar(token, usuario);
-
-      if (!emailVerificado) {
-        const envioConfirmado = await reenviarVerificacao();
-        Alert.alert(
-          'E-mail pendente',
-          envioConfirmado
-            ? 'Seu e-mail ainda não foi verificado. Reenviamos o link de confirmação.'
-            : 'Seu e-mail ainda não foi verificado. Solicite o reenvio na próxima tela.'
-        );
-        navigation.navigate('ConfirmarEmail');
-        return;
-      }
-
-      setSenha('');
-      navigation.navigate('Home');
-    } catch (err) {
-      console.error('Status:', err.response?.status);
-      console.error('Resposta:', JSON.stringify(err.response?.data, null, 2));
-
-      if (err.response?.status === 401) {
-        Alert.alert(
-          'Erro',
-          err.response.data?.mensagem || 'Email ou senha incorretos.'
-        );
-      } else if (err.response?.status === 422) {
-        Alert.alert('Atenção', 'Verifique se o email e a senha estão corretos.');
-      } else {
-        Alert.alert('Erro', 'Não foi possível fazer o login. Verifique a conexão.');
-      }
-    } finally {
-      setLoading(false);
-    }
   };
  
   const handleEsqueceuSenha = () => {
