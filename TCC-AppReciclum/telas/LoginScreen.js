@@ -20,7 +20,6 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useUsuario } from '../context/UsuarioContext';
  
-const API_Login = 'http://SEUIP:8000/api/usuarios/login';
  
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');

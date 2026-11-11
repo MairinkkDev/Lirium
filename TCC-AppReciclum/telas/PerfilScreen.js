@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,17 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+
+import axios from 'axios';
+import { useFocusEffect } from '@react-navigation/native';
+import { useUsuario, API_URL } from '../context/UsuarioContext';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './components/AppHeader';
 import BottomTabBar from './components/BottomTabBar';
-import { useUsuario } from '../context/UsuarioContext'; 
+
 
 // depois inserir dados da API 
 
@@ -25,14 +30,51 @@ function gerarIniciais(nome) {
   return (primeira + ultima).toUpperCase();
 }
 
-const DENUNCIAS_COUNT = 7;
+
+const MESES = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
+
+function membroDesde(dataISO) {
+  if (!dataISO) return '';
+  const data = new Date(dataISO);
+  if (Number.isNaN(data.getTime())) return '';
+  return `Membro desde ${MESES[data.getMonth()]} de ${data.getFullYear()}`;
+}
 
 export default function HomeScreen({ navigation }) {
 
   const { usuario } = useUsuario();
   const nome = usuario?.nomeUsuario ?? 'Usuário';
   const iniciais = gerarIniciais(usuario?.nomeUsuario);
+   const [resumo, setResumo] = useState({ acoes: 0, eventosParticipados: 0 });
 
+  
+  useFocusEffect(
+    useCallback(() => {
+      axios
+        .get(`${API_URL}/me/resumo`)
+        .then((resp) => setResumo(resp.data))
+        .catch((err) => console.log('Erro ao buscar resumo do perfil:', err.message));
+    }, [usuario?.idUsuario])
+  );
+
+  const menuItens = [
+    {
+      key: 'historico',
+      label: 'Histórico de ações',
+      icon: 'time-outline',
+      onPress: () => navigation.navigate('HistoricoAcoes'),
+    },
+    {
+      key: 'eventos',
+      label: 'Meus eventos',
+      icon: 'calendar-outline',
+      onPress: () => navigation.navigate('MeusEventos'),
+    },
+  ];
 
   return (
     <View style={styles.container}>
@@ -60,13 +102,53 @@ export default function HomeScreen({ navigation }) {
                </View>
               <View>
                   <Text style={styles.userName}>{nome}</Text>
+                  
                </View>
             </View>
+
+              {/*   Parte do XP, não sei se ainda vamos fazer isso      
+                <Text style={styles.xpLabel}>{PERFIL.xp} xp</Text>
+                  <View style={styles.xpTrack}>
+                    <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
+                  </View> 
+            */}
+
+            <Text style={styles.memberSince}>{membroDesde(usuario?.created_at)}</Text>
 
             <TouchableOpacity  style={styles.settingsButton} activeOpacity={1} onPress={() => navigation.navigate('OpcoesPerfil')}>
               <Ionicons name="settings-outline" size={28} color="#ffffff" />
             </TouchableOpacity>
           </LinearGradient>
+
+                    {/* Estatísticas */}
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>AÇÕES</Text>
+              <Text style={styles.statValue}>{resumo.acoes}</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statLabel}>EVENTOS</Text>
+              <Text style={styles.statValue}>{resumo.eventosParticipados} Kg</Text>
+            </View>
+          </View>
+
+          {/* Menu de opções */}
+          <View style={styles.menuList}>
+            {menuItens.map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={styles.menuItem}
+                onPress={item.onPress}
+                activeOpacity={0.8}
+              >
+                <View style={styles.menuIconWrapper}>
+                  <Ionicons name={item.icon} size={18} color={GREEN_MAIN} />
+                </View>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={18} color={GRAY_TEXT} />
+              </TouchableOpacity>
+            ))}
+          </View>
 
         
         </ScrollView>
@@ -179,5 +261,50 @@ settingsButton: {
     fontWeight: '700',
     color: GREEN_MAIN,
     marginRight: 8,
+  },
+
+    xpLabel: {
+    color: '#ffffff',
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  xpTrack: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  xpFill: {
+    height: '100%',
+    backgroundColor: '#ffffff',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 22,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: GRAY_TEXT,
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1b2b21',
   },
 });

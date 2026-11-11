@@ -18,8 +18,9 @@ import ReciclagemScreen from './telas/ReciclagemScreen';
 import DashboardScreen from './telas/DashboardScreen';
 import TelaMapa from './telas/TelaMapa';
 import TelaCamera from './telas/TelaCamera';
+import HistoricoAcoesScreen from './telas/Historicoacoesscreen';
+import MeusEventosScreen from './telas/MeusEventosScreen';
 import { UsuarioProvider } from './context/UsuarioContext';
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -48,6 +49,8 @@ export default function App() {
           <Stack.Screen name="OpcoesPerfil" component={OpcoesPerfilScreen} />
           <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} />
           <Stack.Screen name="Evento" component={AvaliacaoEvento} />
+          <Stack.Screen name="HistoricoAcoes" component={HistoricoAcoesScreen} />
+          <Stack.Screen name="MeusEventos" component={MeusEventosScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       </>
