@@ -8,6 +8,7 @@ use App\Models\ImagemUsuario;
 use App\Models\TelefoneInstituicao;
 use App\Models\Usuario;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -73,11 +74,8 @@ class UsuarioController extends Controller
             'instituicao.telefones'
         ]);
 
-        $view = $usuario->isInstituicao()
-            ? 'painelInstituicao.meuPerfil'
-            : 'meuPerfil';
-
-        return view($view)->with('usuario', $usuario);
+        return view('painelInstituicao.meuPerfil')
+            ->with('usuario', $usuario);
     }
 
     public function atualizarPerfil(Request $request)
@@ -297,63 +295,63 @@ class UsuarioController extends Controller
 
     /* ===================== LOGIN / LOGOUT ===================== */
 
-  public function fazerLogin(Request $request)
-{
-    $dados = $request->validate([
-        'emailUsuario' => ['required', 'email'],
-        'senhaUsuario' => ['required', 'string'],
-    ]);
-
-    if (!Auth::attempt([
-        'emailUsuario' => $dados['emailUsuario'],
-        'password'     => $dados['senhaUsuario'],
-    ])) {
-        return back()
-            ->withErrors(['emailUsuario' => 'E-mail ou senha incorretos.'])
-            ->onlyInput('emailUsuario');
-    }
-
-    $request->session()->regenerate();
-
-    $usuario = Auth::user();
-
-    // Conta inativa
-    if ($usuario->statusUsuario !== 'ativo') {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return back()->withErrors([
-            'emailUsuario' => 'Esta conta está inativa.',
+    public function fazerLogin(Request $request)
+    {
+        $dados = $request->validate([
+            'emailUsuario' => ['required', 'email'],
+            'senhaUsuario' => ['required', 'string'],
         ]);
+
+        if (!Auth::attempt([
+            'emailUsuario' => $dados['emailUsuario'],
+            'password'     => $dados['senhaUsuario'],
+        ])) {
+            return back()
+                ->withErrors(['emailUsuario' => 'E-mail ou senha incorretos.'])
+                ->onlyInput('emailUsuario');
+        }
+
+        $request->session()->regenerate();
+
+        $usuario = Auth::user();
+
+        // Conta inativa
+        if ($usuario->statusUsuario !== 'ativo') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'emailUsuario' => 'Esta conta está inativa.',
+            ]);
+        }
+
+        // Instituição suspensa
+        if (
+            $usuario->isInstituicao() &&
+            $usuario->instituicao &&
+            $usuario->instituicao->statusInstituicao === 'inativo'
+        ) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'emailUsuario' => 'Sua instituição está suspensa. Entre em contato com o suporte.',
+            ]);
+        }
+
+        // Redirecionamento por tipo de conta
+        if ($usuario->isAdmin()) {
+            return redirect()->route('admin.home');
+        }
+
+        if ($usuario->isInstituicao()) {
+            return redirect()->route('estoque.painel');
+        }
+
+        return redirect()->route('perfil.show');
     }
-
-    // Instituição suspensa
-    if (
-        $usuario->isInstituicao() &&
-        $usuario->instituicao &&
-        $usuario->instituicao->statusInstituicao === 'inativo'
-    ) {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return back()->withErrors([
-            'emailUsuario' => 'Sua instituição está suspensa. Entre em contato com o suporte.',
-        ]);
-    }
-
-    // Redirecionamento por tipo de conta
-    if ($usuario->isAdmin()) {
-        return redirect()->route('admin.home');
-    }
-
-    if ($usuario->isInstituicao()) {
-        return redirect()->route('estoque.painel');
-    }
-
-    return redirect()->route('perfil.show');
-}
     public function fazerLogOut(Request $request)
     {
         Auth::logout();

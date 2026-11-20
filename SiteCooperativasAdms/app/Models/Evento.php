@@ -17,10 +17,13 @@ class Evento extends Model
 
     public $timestamps = true;
 
+    // Status dos eventos
+    public const STATUS_PENDENTE = 'pendente';
     public const STATUS_AGENDADO = 'agendado';
     public const STATUS_EM_ANDAMENTO = 'em_andamento';
     public const STATUS_CONCLUIDO = 'concluido';
     public const STATUS_CANCELADO = 'cancelado';
+    public const STATUS_RECUSADO = 'recusado';
 
     protected $fillable = [
         'nomeEvento',
@@ -37,8 +40,9 @@ class Evento extends Model
         'statusEvento',
     ];
 
+    // Novos eventos começam aguardando aprovação
     protected $attributes = [
-        'statusEvento' => self::STATUS_AGENDADO,
+        'statusEvento' => self::STATUS_PENDENTE,
     ];
 
     protected function casts(): array
@@ -51,12 +55,21 @@ class Evento extends Model
 
     public function eventoInstituicoes(): HasMany
     {
-        return $this->hasMany(EventoInstituicao::class, 'idEvento', 'idEvento');
+        return $this->hasMany(
+            EventoInstituicao::class,
+            'idEvento',
+            'idEvento'
+        );
     }
+
     public function avaliacoes(): HasMany
-{
-    return $this->hasMany(AvaliacaoEvento::class, 'idEvento', 'idEvento');
-}
+    {
+        return $this->hasMany(
+            AvaliacaoEvento::class,
+            'idEvento',
+            'idEvento'
+        );
+    }
 
     public function instituicoes(): BelongsToMany
     {

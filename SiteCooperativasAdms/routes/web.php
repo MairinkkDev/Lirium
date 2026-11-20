@@ -56,7 +56,10 @@ Route::post('/cadastro/usuario', [UsuarioController::class, 'store'])
 // DASHBOARD (ADMIN)
 // ==================================================
 
-Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
+Route::middleware([
+    Authenticate::class,
+    VerificaNivelAcesso::class . ':3'
+])->group(function () {
 
     Route::get('/home', function () {
         return view('painelAdmin.homeAdmin');
@@ -71,7 +74,10 @@ Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->gro
 // ==================================================
 
 // Gerenciamento (somente admin)
-Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
+Route::middleware([
+    Authenticate::class,
+    VerificaNivelAcesso::class . ':3'
+])->group(function () {
 
     Route::get('/usuarios', [UsuarioController::class, 'index']);
     Route::get('/usuarios/{idUsuario}', [UsuarioController::class, 'show']);
@@ -159,11 +165,17 @@ Route::delete('/denuncia/{idDenuncia}', [DenunciaController::class, 'excluir'])
 Route::get('/instituicao/inicio', function () {
     return view('welcome');
 })
-    ->middleware([Authenticate::class, VerificaNivelAcesso::class . ':2'])
+    ->middleware([
+        Authenticate::class,
+        VerificaNivelAcesso::class . ':2'
+    ])
     ->name('instituicao.inicio');
 
 // Gerenciamento de instituições (somente admin)
-Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
+Route::middleware([
+    Authenticate::class,
+    VerificaNivelAcesso::class . ':3'
+])->group(function () {
 
     Route::get('/admin/instituicoes', [InstituicaoController::class, 'painel'])
         ->name('admin.instituicoes');
@@ -189,7 +201,7 @@ Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->gro
 
 
 // ==================================================
-// EVENTOS
+// EVENTOS - INSTITUIÇÃO
 // ==================================================
 
 Route::get('/eventos', [EventoController::class, 'painel'])
@@ -226,10 +238,40 @@ Route::delete('/eventos/{idEvento}', [EventoController::class, 'excluir'])
 
 
 // ==================================================
+// EVENTOS - ADMINISTRADOR
+// ==================================================
+
+Route::middleware([
+    Authenticate::class,
+    VerificaNivelAcesso::class . ':3'
+])->prefix('admin/eventos')->name('admin.eventos.')->group(function () {
+
+    // Listagem de todos os eventos e solicitações
+    Route::get('/', [EventoController::class, 'painelAdmin'])
+        ->name('painel');
+
+    // Detalhes de qualquer evento
+    Route::get('/{idEvento}', [EventoController::class, 'detalheAdmin'])
+        ->name('detalhe');
+
+    // Aprovar solicitação
+    Route::patch('/{idEvento}/aprovar', [EventoController::class, 'aprovar'])
+        ->name('aprovar');
+
+    // Recusar solicitação
+    Route::patch('/{idEvento}/recusar', [EventoController::class, 'recusar'])
+        ->name('recusar');
+});
+
+
+// ==================================================
 // MATERIAIS, CATEGORIAS E ADMINISTRADORES (ADMIN)
 // ==================================================
 
-Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
+Route::middleware([
+    Authenticate::class,
+    VerificaNivelAcesso::class . ':3'
+])->group(function () {
 
     // Materiais recicláveis
     Route::get('/materiais', [MaterialReciclavelController::class, 'index']);
