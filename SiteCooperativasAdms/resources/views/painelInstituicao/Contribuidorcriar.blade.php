@@ -3,9 +3,6 @@
 @section('titulo', 'Cadastrar contribuidor')
 
 @section('content')
-  @php
-    $materiais = $materiais ?? [];
-  @endphp
 
   <a class="inst-voltar" href="{{ url('/contribuidor') }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"
@@ -15,17 +12,27 @@
     Voltar para contribuidor
   </a>
 
+  <div class="criar-wrap">
+
   <form action="{{ url('/contribuidor') }}" method="post" class="inst-form-card" novalidate>
     @csrf
 
     <h1 class="inst-form-title">Cadastrar Contribuidor</h1>
-    <p class="inst-form-sub">Registre a entrega de um usuário já cadastrado, informando o CPF</p>
+    <p class="inst-form-sub">Cadastre uma nova pessoa informando nome, CPF e telefone</p>
 
     @if(session('erro'))
       <p class="aviso-erro">{{ session('erro') }}</p>
     @endif
 
     <div class="inst-form-grid">
+      <div class="full">
+        <label class="inst-label" for="nomeContribuidor">Nome</label>
+        <input type="text" id="nomeContribuidor" name="nomeContribuidor" maxlength="100"
+          class="inst-input {{ $errors->has('nomeContribuidor') ? 'invalido' : '' }}"
+          value="{{ old('nomeContribuidor') }}" required>
+        @error('nomeContribuidor') <span class="inst-erro">{{ $message }}</span> @enderror
+      </div>
+
       <div>
         <label class="inst-label" for="cpfContribuidor">CPF</label>
         <input type="text" id="cpfContribuidor" name="cpfContribuidor" inputmode="numeric" maxlength="14"
@@ -35,44 +42,11 @@
       </div>
 
       <div>
-        <label class="inst-label" for="telefoneContribuidor">Telefone (opcional)</label>
+        <label class="inst-label" for="telefoneContribuidor">Telefone</label>
         <input type="tel" id="telefoneContribuidor" name="telefoneContribuidor" inputmode="tel" maxlength="15"
           class="inst-input {{ $errors->has('telefoneContribuidor') ? 'invalido' : '' }}"
-          placeholder="(11) 95173-9135" value="{{ old('telefoneContribuidor') }}">
+          placeholder="(11) 95173-9135" value="{{ old('telefoneContribuidor') }}" required>
         @error('telefoneContribuidor') <span class="inst-erro">{{ $message }}</span> @enderror
-      </div>
-
-      <div>
-        <label class="inst-label" for="materialContribuidor">Material</label>
-        <input type="text" id="materialContribuidor" name="materialContribuidor" list="listaMateriais"
-          class="inst-input {{ $errors->has('materialContribuidor') ? 'invalido' : '' }}"
-          placeholder="Ex: Plástico" value="{{ old('materialContribuidor') }}" required>
-        <datalist id="listaMateriais">
-          @foreach($materiais as $m)
-            <option value="{{ $m }}"></option>
-          @endforeach
-        </datalist>
-        @error('materialContribuidor') <span class="inst-erro">{{ $message }}</span> @enderror
-      </div>
-
-      <div>
-        <label class="inst-label" for="quantidadeContribuidor">Quantidade (kg)</label>
-        <input type="text" id="quantidadeContribuidor" name="quantidadeContribuidor" inputmode="decimal"
-          class="inst-input {{ $errors->has('quantidadeContribuidor') ? 'invalido' : '' }}"
-          placeholder="Ex: 11,5" value="{{ old('quantidadeContribuidor') }}" required>
-        @error('quantidadeContribuidor') <span class="inst-erro">{{ $message }}</span> @enderror
-      </div>
-    </div>
-
-    <hr class="inst-form-sep">
-
-    <div class="inst-form-grid">
-      <div class="full">
-        <label class="inst-label" for="dataEntregaContribuidor">Data de entrega</label>
-        <input type="date" id="dataEntregaContribuidor" name="dataEntregaContribuidor"
-          class="inst-input inst-input-data {{ $errors->has('dataEntregaContribuidor') ? 'invalido' : '' }}"
-          value="{{ old('dataEntregaContribuidor') }}" required>
-        @error('dataEntregaContribuidor') <span class="inst-erro">{{ $message }}</span> @enderror
       </div>
     </div>
 
@@ -82,8 +56,102 @@
     </div>
   </form>
 
+  </div>
+
   <style>
-    .aviso-erro { background: #fde2e2; color: #9b1c1c; border-radius: 8px; padding: 8px 12px; font-size: 12px; margin: 0 0 14px; }
+    /* A área principal do layout tem max-width e fica à esquerda; aqui ela ocupa
+       toda a largura e o bloco de cadastro é centralizado na página. */
+    .main { max-width: none; }
+
+    .criar-wrap {
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .criar-wrap * { box-sizing: border-box; }
+
+    .inst-voltar {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 0 20px;
+      font-size: 20px;
+      font-weight: 600;
+      gap: 8px;
+    }
+
+    .inst-voltar svg { width: 24px; height: 24px; }
+
+    .criar-wrap .inst-form-card {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 44px 48px;
+      border: 2px solid #d0d0d0;
+      border-radius: 12px;
+      box-shadow: none;
+    }
+
+    .criar-wrap .inst-form-title {
+      font-size: 36px;
+      text-align: center;
+      margin: 0 0 8px;
+    }
+
+    .criar-wrap .inst-form-sub {
+      font-size: 18px;
+      text-align: center;
+      margin: 0 0 30px;
+    }
+
+    .criar-wrap .inst-form-grid { gap: 24px; }
+
+    .criar-wrap .inst-label {
+      display: block;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .criar-wrap .inst-input {
+      width: 100%;
+      font-size: 19px;
+      padding: 15px 18px;
+      height: auto;
+      border-radius: 10px;
+    }
+
+    .criar-wrap .inst-erro { font-size: 15px; margin-top: 6px; display: block; }
+
+    .criar-wrap .inst-form-actions {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .criar-wrap .btn-form {
+      font-size: 19px;
+      font-weight: 600;
+      padding: 15px 40px;
+      border-radius: 10px;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .aviso-erro { background: #fde2e2; color: #9b1c1c; border-radius: 8px; padding: 12px 16px; font-size: 16px; margin: 0 0 20px; }
+
+    @media (max-width: 600px) {
+      .criar-wrap .inst-form-card { padding: 28px 20px; }
+      .criar-wrap .inst-form-title { font-size: 28px; }
+      .criar-wrap .inst-form-sub { font-size: 16px; }
+      .criar-wrap .inst-form-actions { flex-direction: column; }
+      .criar-wrap .btn-form { width: 100%; }
+    }
   </style>
 
   <script>

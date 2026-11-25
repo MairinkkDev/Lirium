@@ -2,28 +2,31 @@
 
 @section('titulo', 'Dashboard')
 
-@push('estilos')
+  @push('estilos')
   <style>
     /* Estilos exclusivos do /dash. Tudo escopado em .dash para não afetar as outras telas do ADM. */
-    .dash {
-      --dash-orange: #e8892b;
-      --dash-card-shadow: 0 1px 3px rgba(15, 40, 25, .06);
-    }
+   .dash {
+  --dash-orange: #e8892b;
+  --dash-card-shadow: 0 2px 8px rgba(15, 40, 25, .08);
+  width: 100%;
+  max-width: none;
+}
 
-    .dash .page-title { font-size: 22px; font-weight: 700; }
-    .dash .page-sub   { font-size: 13px; }
+    .dash .page-head  { margin-bottom: 28px; }
+    .dash .page-title { font-size: 32px; font-weight: 700; }
+    .dash .page-sub   { font-size: 17px; margin-top: 6px; }
 
     .dash-card {
       background: var(--white);
-      border-radius: 12px;
-      padding: 18px 20px;
+      border-radius: 16px;
+      padding: 26px 30px;
       box-shadow: var(--dash-card-shadow);
     }
 
     .dash-card-title {
-      margin: 0 0 12px;
+      margin: 0 0 18px;
       font-family: 'Raleway', sans-serif;
-      font-size: 13px;
+      font-size: 19px;
       font-weight: 700;
       color: var(--text-dark);
     }
@@ -32,14 +35,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 16px;
+      margin-bottom: 18px;
     }
 
     .dash-card-head .dash-card-title { margin: 0; }
 
     .dash-link {
-      font-size: 10.5px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--green-1);
       text-decoration: none;
@@ -47,73 +50,74 @@
     }
 
     .dash-link:hover { text-decoration: underline; }
-    .dash-link:focus-visible { outline: 2px solid var(--green-1); outline-offset: 2px; border-radius: 4px; }
+    .dash-link:focus-visible { outline: 3px solid var(--green-1); outline-offset: 3px; border-radius: 4px; }
 
     /* ---------- cards de resumo ---------- */
     .dash-stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 26px;
+  margin-bottom: 26px;
+}
 
     .dash-stat-top {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      font-size: 11.5px;
+      gap: 14px;
+      margin-bottom: 20px;
+      font-size: 16px;
       font-weight: 600;
+      line-height: 1.3;
       color: var(--text-dark);
     }
 
     .dash-stat-icon {
-      width: 30px;
-      height: 30px;
+      width: 46px;
+      height: 46px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       background: var(--icon-bg);
-      border-radius: 8px;
+      border-radius: 12px;
       color: var(--icon-color);
     }
 
-    .dash-stat-icon svg { width: 18px; height: 18px; }
+    .dash-stat-icon svg { width: 27px; height: 27px; }
 
     .dash-stat-value {
-      font-size: 26px;
+      font-size: 42px;
       font-weight: 700;
       line-height: 1.1;
       color: var(--text-dark);
     }
 
     .dash-var {
-      margin-top: 10px;
-      font-size: 9.5px;
+      margin-top: 14px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-muted);
     }
 
-    .dash-var b { font-weight: 700; }
+    .dash-var b { font-weight: 700; font-size: 16px; }
     .dash-var.good b { color: var(--green-1); }
     .dash-var.bad b  { color: #e14b4b; }
 
     .dash-stat.alerta {
       background: #fff4e3;
-      border: 1px solid #f3d6a6;
+      border: 2px solid #f3d6a6;
     }
 
     .dash-stat.alerta .dash-stat-icon { background: #fde3b8; color: #c9700b; }
     .dash-stat.alerta .dash-stat-top,
     .dash-stat.alerta .dash-stat-value { color: #7a4a0a; }
-    .dash-stat.alerta .dash-link { display: inline-block; margin-top: 10px; color: #a85c08; }
+    .dash-stat.alerta .dash-link { display: inline-block; margin-top: 14px; font-size: 16px; color: #a85c08; }
 
     /* ---------- linha: gráfico + online ---------- */
     .dash-row {
       display: grid;
-      gap: 16px;
-      margin-bottom: 16px;
+      gap: 26px;
+      margin-bottom: 26px;
       align-items: stretch;
     }
 
@@ -123,15 +127,15 @@
     .dash-legenda {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 9px;
+      gap: 8px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-muted);
     }
 
     .dash-legenda i {
-      width: 7px;
-      height: 7px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background: var(--green-1);
     }
@@ -139,16 +143,16 @@
     /* gráfico de linha (SVG + rótulos em HTML, escala com a largura) */
     .dash-chart {
       display: grid;
-      grid-template-columns: 30px minmax(0, 1fr);
-      column-gap: 8px;
+      grid-template-columns: 48px minmax(0, 1fr);
+      column-gap: 12px;
     }
 
     .dash-chart-y {
       position: relative;
-      height: 150px;
-      font-size: 8px;
+      height: 240px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--text-light);
+      color: var(--text-muted);
       text-align: right;
     }
 
@@ -160,7 +164,7 @@
 
     .dash-chart-plot {
       position: relative;
-      height: 150px;
+      height: 240px;
     }
 
     .dash-chart-plot .grade {
@@ -180,10 +184,10 @@
 
     .dash-chart-plot .ponto {
       position: absolute;
-      width: 9px;
-      height: 9px;
+      width: 14px;
+      height: 14px;
       background: #fff;
-      border: 2px solid var(--green-1);
+      border: 3px solid var(--green-1);
       border-radius: 50%;
       transform: translate(-50%, -50%);
     }
@@ -192,30 +196,30 @@
       grid-column: 2;
       display: flex;
       justify-content: space-between;
-      margin-top: 8px;
-      font-size: 8px;
+      margin-top: 12px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--text-light);
+      color: var(--text-muted);
     }
 
     /* usuários online */
     .dash-online-valor {
-      font-size: 30px;
+      font-size: 48px;
       font-weight: 700;
       line-height: 1.1;
       color: var(--text-dark);
     }
 
     .dash-online-sub {
-      margin: 4px 0 14px;
-      font-size: 9.5px;
+      margin: 8px 0 20px;
+      font-size: 15px;
       font-weight: 500;
       color: var(--text-muted);
     }
 
     .dash-bar {
       display: flex;
-      height: 8px;
+      height: 14px;
       overflow: hidden;
       background: #e3e7e5;
       border-radius: 999px;
@@ -226,25 +230,25 @@
     .dash-bar .laranja { background: var(--dash-orange); }
     .dash-bar .azul    { background: #2563c9; }
 
-    .dash-lista { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .dash-lista { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
 
     .dash-lista-linha {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      font-size: 10px;
+      gap: 14px;
+      font-size: 16px;
       font-weight: 500;
       color: var(--text-dark);
     }
 
-    .dash-lista-linha .rotulo { display: inline-flex; align-items: center; gap: 8px; }
-    .dash-lista-linha b { font-weight: 700; }
+    .dash-lista-linha .rotulo { display: inline-flex; align-items: center; gap: 10px; }
+    .dash-lista-linha b { font-weight: 700; font-size: 18px; }
 
     .dash-quad {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
       background: #d4d9d6;
     }
 
@@ -253,51 +257,51 @@
     /* cooperativas e ONGs */
     .dash-duplo {
       display: flex;
-      gap: 40px;
-      margin-bottom: 14px;
+      gap: 56px;
+      margin-bottom: 20px;
     }
 
     .dash-duplo .rot {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 9.5px;
+      gap: 9px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text-muted);
     }
 
-    .dash-duplo .rot i { width: 7px; height: 7px; border-radius: 50%; }
-    .dash-duplo .num { margin-top: 4px; font-size: 24px; font-weight: 700; color: var(--text-dark); }
+    .dash-duplo .rot i { width: 11px; height: 11px; border-radius: 50%; }
+    .dash-duplo .num { margin-top: 6px; font-size: 40px; font-weight: 700; color: var(--text-dark); }
 
     /* denúncias por status */
-    .dash-status { display: flex; flex-direction: column; gap: 12px; }
+    .dash-status { display: flex; flex-direction: column; gap: 18px; }
 
     .dash-status-topo {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 10px;
+      margin-bottom: 8px;
+      font-size: 16px;
       font-weight: 500;
       color: var(--text-dark);
     }
 
-    .dash-status-topo b { font-weight: 700; }
+    .dash-status-topo b { font-weight: 700; font-size: 18px; }
 
     /* atividades recentes */
     .dash-atividades { padding: 0; overflow: hidden; }
-    .dash-atividades .dash-card-head { padding: 16px 20px 12px; margin: 0; }
+    .dash-atividades .dash-card-head { padding: 24px 30px 16px; margin: 0; }
 
     .dash-ativ-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 20px;
+      gap: 18px;
+      padding: 18px 30px;
       border-top: 1px solid var(--border);
     }
 
     .dash-ativ-icone {
-      width: 28px;
-      height: 28px;
+      width: 46px;
+      height: 46px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -308,46 +312,48 @@
     }
 
     .dash-ativ-icone.denuncia { background: #fdecdc; color: #c9700b; }
-    .dash-ativ-icone svg { width: 14px; height: 14px; }
+    .dash-ativ-icone svg { width: 23px; height: 23px; }
 
     .dash-ativ-texto { flex: 1; min-width: 0; }
 
     .dash-ativ-texto strong {
       display: block;
-      font-size: 10.5px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--text-dark);
     }
 
     .dash-ativ-texto span {
       display: block;
+      margin-top: 3px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 9px;
+      font-size: 14px;
       font-weight: 500;
       color: var(--text-muted);
     }
 
-    .dash-ativ-lado { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-    .dash-ativ-lado .badge-status { padding: 3px 11px; font-size: 9px; }
-    .dash-ativ-lado .data { font-size: 9px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+    .dash-ativ-lado { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+    .dash-ativ-lado .badge-status { padding: 6px 16px; font-size: 13px; }
+    .dash-ativ-lado .data { font-size: 14px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
 
-    .dash-vazio { padding: 24px 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); }
+    .dash-vazio { padding: 34px 30px; font-size: 16px; color: var(--text-muted); border-top: 1px solid var(--border); }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1280px) {
       .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
       .dash-row.chart-online,
       .dash-row.duo { grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 560px) {
+    @media (max-width: 600px) {
       .dash-stats { grid-template-columns: 1fr; }
-      .dash-ativ-lado .data { display: none; }
-    }
+      .dash-card { padding: 20px 20px; }
+      .dash-atividades .dash-card-head { padding: 20px 20px 14px; }
+      .dash-ativ-item { padding: 16px 20px;
   </style>
 @endpush
 

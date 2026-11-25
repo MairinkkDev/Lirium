@@ -31,12 +31,13 @@ class Usuario extends Authenticatable
     ];
 
     protected $hidden = [
-        'senhaUsuario'
+        'senhaUsuario',
+        'remember_token'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
-    'updated_at' => 'datetime',
+        'updated_at' => 'datetime',
         'ultimoAcessoUsuario' => 'datetime',
         'email_verified_at' => 'datetime'
     ];
@@ -51,10 +52,6 @@ class Usuario extends Authenticatable
         return 'senhaUsuario';
     }
 
-    public function getRememberTokenName()
-    {
-        return '';
-    }
 
     // Um usuário pertence a uma instituição.
     public function instituicao()
@@ -67,30 +64,31 @@ class Usuario extends Authenticatable
     }
 
     public function getFotoUrlAttribute(): ?string
-{
-    $img = $this->imagem;
+    {
+        $img = $this->imagem;
 
-    if (!$img || !$img->caminhoImagemUsuario) {
-        return null;
+        if (!$img || !$img->caminhoImagemUsuario) {
+            return null;
+        }
+
+        return route('foto.perfil', ['tipo' => 'usuario', 'id' => $this->idUsuario])
+            . '?v=' . $img->updated_at?->timestamp;
     }
 
-    return route('foto.perfil', ['tipo' => 'usuario', 'id' => $this->idUsuario])
-        . '?v=' . $img->updated_at?->timestamp;
-}
+    public function imagem()
+    {
+        return $this->hasOne(ImagemUsuario::class, 'idUsuario', 'idUsuario');
+    }
 
-public function imagem()
-{
-    return $this->hasOne(ImagemUsuario::class, 'idUsuario', 'idUsuario');
-}
     public function isAdmin(): bool
-{
-    return $this->idNivelAcesso == 3;
-}
+    {
+        return $this->idNivelAcesso == 3;
+    }
 
-public function isInstituicao(): bool
-{
-    return  $this->idNivelAcesso == 2;
-}
+    public function isInstituicao(): bool
+    {
+        return $this->idNivelAcesso == 2;
+    }
 
     // Um usuário pertence a um nível de acesso.
     public function nivelAcesso()

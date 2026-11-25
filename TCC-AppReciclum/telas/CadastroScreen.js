@@ -96,6 +96,10 @@ export default function CadastroScreen({ navigation }) {
             source={require('../assets/logo.png')}
             style={styles.logoImage}
           />
+
+          <Text style={styles.Reciclum}>
+            Reciclum 
+          </Text>
         </View>
       </LinearGradient>
 
@@ -210,6 +214,14 @@ const styles = StyleSheet.create({
     width: TAM_IMG,
     height: TAM_IMG,
     resizeMode: 'contain',
+  },
+    Reciclum:{
+    fontSize: 24,
+    fontWeight: '500',
+    color: BG_CREAM,
+    letterSpacing: 1,
+    marginBottom: 28,
+    marginLeft: -5,
   },
   cardWrapper: {
     flex: 1,

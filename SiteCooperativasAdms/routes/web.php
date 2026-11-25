@@ -56,10 +56,7 @@ Route::post('/cadastro/usuario', [UsuarioController::class, 'store'])
 // DASHBOARD (ADMIN)
 // ==================================================
 
-Route::middleware([
-    Authenticate::class,
-    VerificaNivelAcesso::class . ':3'
-])->group(function () {
+Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
 
     Route::get('/home', function () {
         return view('painelAdmin.homeAdmin');
@@ -74,10 +71,7 @@ Route::middleware([
 // ==================================================
 
 // Gerenciamento (somente admin)
-Route::middleware([
-    Authenticate::class,
-    VerificaNivelAcesso::class . ':3'
-])->group(function () {
+Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
 
     Route::get('/usuarios', [UsuarioController::class, 'index']);
     Route::get('/usuarios/{idUsuario}', [UsuarioController::class, 'show']);
@@ -165,17 +159,11 @@ Route::delete('/denuncia/{idDenuncia}', [DenunciaController::class, 'excluir'])
 Route::get('/instituicao/inicio', function () {
     return view('welcome');
 })
-    ->middleware([
-        Authenticate::class,
-        VerificaNivelAcesso::class . ':2'
-    ])
+    ->middleware([Authenticate::class, VerificaNivelAcesso::class . ':2'])
     ->name('instituicao.inicio');
 
 // Gerenciamento de instituições (somente admin)
-Route::middleware([
-    Authenticate::class,
-    VerificaNivelAcesso::class . ':3'
-])->group(function () {
+Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
 
     Route::get('/admin/instituicoes', [InstituicaoController::class, 'painel'])
         ->name('admin.instituicoes');
@@ -201,7 +189,7 @@ Route::middleware([
 
 
 // ==================================================
-// EVENTOS - INSTITUIÇÃO
+// EVENTOS
 // ==================================================
 
 Route::get('/eventos', [EventoController::class, 'painel'])
@@ -246,32 +234,17 @@ Route::middleware([
     VerificaNivelAcesso::class . ':3'
 ])->prefix('admin/eventos')->name('admin.eventos.')->group(function () {
 
-    // Listagem de todos os eventos e solicitações
-    Route::get('/', [EventoController::class, 'painelAdmin'])
-        ->name('painel');
-
-    // Detalhes de qualquer evento
-    Route::get('/{idEvento}', [EventoController::class, 'detalheAdmin'])
-        ->name('detalhe');
-
-    // Aprovar solicitação
-    Route::patch('/{idEvento}/aprovar', [EventoController::class, 'aprovar'])
-        ->name('aprovar');
-
-    // Recusar solicitação
-    Route::patch('/{idEvento}/recusar', [EventoController::class, 'recusar'])
-        ->name('recusar');
+    Route::get('/', [EventoController::class, 'painelAdmin'])->name('painel');
+    Route::get('/{idEvento}', [EventoController::class, 'detalheAdmin'])->name('detalhe');
+    Route::patch('/{idEvento}/aprovar', [EventoController::class, 'aprovar'])->name('aprovar');
+    Route::patch('/{idEvento}/recusar', [EventoController::class, 'recusar'])->name('recusar');
 });
-
 
 // ==================================================
 // MATERIAIS, CATEGORIAS E ADMINISTRADORES (ADMIN)
 // ==================================================
 
-Route::middleware([
-    Authenticate::class,
-    VerificaNivelAcesso::class . ':3'
-])->group(function () {
+Route::middleware([Authenticate::class, VerificaNivelAcesso::class . ':3'])->group(function () {
 
     // Materiais recicláveis
     Route::get('/materiais', [MaterialReciclavelController::class, 'index']);
@@ -414,6 +387,16 @@ Route::delete('/contribuidor/{id}', [ContribuidorController::class, 'excluir'])
 Route::post('/contribuidor/{id}/adicionar', [ContribuidorController::class, 'adicionarQuantidade'])
     ->middleware(Authenticate::class)
     ->name('contribuidor.adicionar');
+
+    Route::get('/contribuidor/{id}/historico', [ContribuidorController::class, 'historico'])
+    ->middleware(Authenticate::class)
+    ->name('contribuidor.historico');
+
+    Route::post('/contribuidor/{id}/entregas', [ContribuidorController::class, 'registrarEntrega'])
+        ->middleware(Authenticate::class)
+        ->name('contribuidor.entregas.store');
+
+        Route::patch('/contribuidor/{id}/quantidade', [ContribuidorController::class, 'alterarEntrega']);
 
 
 // ==================================================

@@ -7,8 +7,12 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
+  Alert,
+  Image,
+  Modal,
+  ActivityIndicator
 } from 'react-native';
-
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUsuario, API_URL } from '../context/UsuarioContext';
@@ -43,13 +47,109 @@ function membroDesde(dataISO) {
   if (Number.isNaN(data.getTime())) return '';
   return `Membro desde ${MESES[data.getMonth()]} de ${data.getFullYear()}`;
 }
+// monta a URL pública da foto a partir do caminho salvo no banco ("usuarios/abc.jpg")
+function urlDaFoto(caminho) {
+  if (!caminho) return null;
+  const base = API_URL.replace(/\/api\/?$/, '');
+  return `${base}/storage/${caminho}`;
+}
+
+// 35 -> "35" | 12.5 -> "12,5"
+function formatarKg(valor) {
+  const numero = Math.round(Number(valor || 0) * 10) / 10;
+  return String(numero).replace('.', ',');
+}
 
 export default function HomeScreen({ navigation }) {
 
-  const { usuario } = useUsuario();
+  const { usuario, setUsuario } = useUsuario();
   const nome = usuario?.nomeUsuario ?? 'Usuário';
   const iniciais = gerarIniciais(usuario?.nomeUsuario);
-   const [resumo, setResumo] = useState({ acoes: 0, eventosParticipados: 0 });
+   const [resumo, setResumo] = useState({ acoes: 0, lixoReciclado: 0 });
+
+     // ---------- foto de perfil ----------
+  const [menuFotoAberto, setMenuFotoAberto] = useState(false);
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [fotoComErro, setFotoComErro] = useState(false);
+  const fotoUri = urlDaFoto(usuario?.fotoCaminho);
+
+  // fecha o menu e só depois abre câmera/galeria (no iOS precisa esperar o modal sumir)
+  function fecharEExecutar(acao) {
+    setMenuFotoAberto(false);
+    setTimeout(acao, 400);
+  }
+
+  async function enviarFoto(asset) {
+    try {
+      setEnviandoFoto(true);
+
+            if (!asset.base64) {
+        throw new Error('A imagem não veio em base64');
+      }
+
+      const tipo = asset.mimeType || 'image/jpeg';
+
+      // manda a imagem como texto (base64) dentro de um JSON normal,
+      // sem multipart: funciona igual em qualquer servidor/configuração
+      const resp = await axios.post(`${API_URL}/me/foto`, {
+        foto: `data:${tipo};base64,${asset.base64}`,
+      });
+
+      // guarda o novo caminho no usuário do contexto: a tela atualiza sozinha
+      setFotoComErro(false);
+      setUsuario((atual) => ({ ...atual, fotoCaminho: resp.data.fotoCaminho }));
+
+
+    } catch (err) {
+      console.log('Erro ao enviar foto:', err.response ? err.response.data : err.message);
+      Alert.alert('Erro', 'Não foi possível atualizar a foto. Tente novamente.');
+    } finally {
+      setEnviandoFoto(false);
+    }
+  }
+
+  async function escolherDaGaleria() {
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    if (!resultado.canceled && resultado.assets?.length > 0) {
+      enviarFoto(resultado.assets[0]);
+    }
+  }
+
+  async function tirarFoto() {
+    const permissao = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissao.granted) {
+      Alert.alert('Permissão necessária', 'Permita o acesso à câmera para tirar uma foto.');
+      return;
+    }
+    const resultado = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!resultado.canceled && resultado.assets?.length > 0) {
+      enviarFoto(resultado.assets[0]);
+    }
+  }
+
+  async function removerFoto() {
+    try {
+      setEnviandoFoto(true);
+      await axios.delete(`${API_URL}/me/foto`);
+      setUsuario((atual) => ({ ...atual, fotoCaminho: null }));
+    } catch (err) {
+      console.log('Erro ao remover foto:', err.response ? err.response.data : err.message);
+      Alert.alert('Erro', 'Não foi possível remover a foto.');
+    } finally {
+      setEnviandoFoto(false);
+    }
+  }
 
   
   useFocusEffect(
@@ -97,9 +197,35 @@ export default function HomeScreen({ navigation }) {
             
 
             <View style={styles.profileRow}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{iniciais}</Text>
-               </View>
+                                <TouchableOpacity
+                  style={styles.avatar}
+                  activeOpacity={0.8}
+                  disabled={enviandoFoto}
+                  onPress={() => setMenuFotoAberto(true)}
+                >
+                  {fotoUri && !fotoComErro ? (
+                    <Image
+                      source={{ uri: fotoUri }}
+                      style={styles.avatarImage}
+                      onError={(e) => {
+                        console.log('Erro ao carregar a foto:', fotoUri, e.nativeEvent?.error);
+                        setFotoComErro(true);
+                        }}
+                    />
+                  ) : (
+                    <Text style={styles.avatarText}>{iniciais}</Text>
+                  )}
+
+                  {enviandoFoto ? (
+                    <View style={styles.avatarLoading}>
+                      <ActivityIndicator color="#ffffff" />
+                    </View>
+                  ) : (
+                    <View style={styles.cameraBadge}>
+                      <Ionicons name="camera" size={11} color="#ffffff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
               <View>
                   <Text style={styles.userName}>{nome}</Text>
                   
@@ -127,8 +253,8 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.statValue}>{resumo.acoes}</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statLabel}>EVENTOS</Text>
-              <Text style={styles.statValue}>{resumo.eventosParticipados} Kg</Text>
+              <Text style={styles.statLabel}>LIXO RECICLADO</Text>
+              <Text style={styles.statValue}>{formatarKg(resumo.lixoReciclado)} Kg</Text>
             </View>
           </View>
 
@@ -155,6 +281,56 @@ export default function HomeScreen({ navigation }) {
 
         <BottomTabBar active="perfil" navigation={navigation} />
       </SafeAreaView>
+            {/* Menu da foto de perfil */}
+      <Modal
+        visible={menuFotoAberto}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuFotoAberto(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalFundo}
+          activeOpacity={1}
+          onPress={() => setMenuFotoAberto(false)}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitulo}>Foto de perfil</Text>
+
+            <TouchableOpacity
+              style={styles.modalOpcao}
+              onPress={() => fecharEExecutar(tirarFoto)}
+            >
+              <Ionicons name="camera-outline" size={20} color={GREEN_DARK} />
+              <Text style={styles.modalOpcaoTexto}>Tirar foto agora</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOpcao}
+              onPress={() => fecharEExecutar(escolherDaGaleria)}
+            >
+              <Ionicons name="images-outline" size={20} color={GREEN_DARK} />
+              <Text style={styles.modalOpcaoTexto}>Escolher da galeria</Text>
+            </TouchableOpacity>
+
+            {fotoUri ? (
+              <TouchableOpacity
+                style={styles.modalOpcao}
+                onPress={() => fecharEExecutar(removerFoto)}
+              >
+                <Ionicons name="trash-outline" size={20} color="#b3261e" />
+                <Text style={[styles.modalOpcaoTexto, { color: '#b3261e' }]}>Remover foto</Text>
+              </TouchableOpacity>
+            ) : null}
+
+            <TouchableOpacity
+              style={styles.modalCancelar}
+              onPress={() => setMenuFotoAberto(false)}
+            >
+              <Text style={styles.modalCancelarTexto}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -306,5 +482,72 @@ settingsButton: {
     fontSize: 18,
     fontWeight: '800',
     color: '#1b2b21',
+  },
+    avatarImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+  avatarLoading: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 23,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    right: -3,
+    bottom: -3,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: GREEN_MAIN,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalFundo: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
+  },
+  modalTitulo: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1b2b21',
+    marginBottom: 8,
+  },
+  modalOpcao: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  modalOpcaoTexto: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1b2b21',
+    marginLeft: 12,
+  },
+  modalCancelar: {
+    marginTop: 6,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: '#f0f1ea',
+    alignItems: 'center',
+  },
+  modalCancelarTexto: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#6b7468',
   },
 });

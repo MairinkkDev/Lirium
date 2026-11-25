@@ -297,6 +297,131 @@
     .admin-eventos .paginacao {
         margin-top: 18px;
     }
+        .admin-eventos .chip-status.recusado {
+        background: #ffebeb;
+        color: #b83b3b;
+    }
+
+    /* Mensagem de sucesso */
+    .admin-eventos .alerta-sucesso {
+        margin-bottom: 18px;
+        padding: 13px 16px;
+        border: 1px solid #b9dfc3;
+        border-radius: 8px;
+        background: #e8f6ec;
+        color: #19733c;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Modal de confirmação */
+    .modal-confirmacao {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(20, 30, 24, .55);
+    }
+
+    .modal-confirmacao.aberto {
+        display: flex;
+    }
+
+    .modal-confirmacao .modal-caixa {
+        width: 100%;
+        max-width: 420px;
+        padding: 28px 26px 22px;
+        border-radius: 14px;
+        background: #fff;
+        text-align: center;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, .25);
+        animation: modalEntrada .18s ease-out;
+    }
+
+    @keyframes modalEntrada {
+        from { opacity: 0; transform: translateY(10px) scale(.97); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    .modal-confirmacao .modal-icone {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+    }
+
+    .modal-confirmacao .modal-icone svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .modal-confirmacao.tipo-aprovar .modal-icone { background: #e2f5e8; color: #218044; }
+    .modal-confirmacao.tipo-recusar .modal-icone { background: #ffebeb; color: #c43d3d; }
+
+    .modal-confirmacao .modal-titulo {
+        margin: 0 0 8px;
+        font-size: 19px;
+        font-weight: 750;
+        color: #203b29;
+    }
+
+    .modal-confirmacao .modal-texto {
+        margin: 0 0 22px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #59695e;
+    }
+
+    .modal-confirmacao .modal-texto strong {
+        color: #26352a;
+    }
+
+    .modal-confirmacao .modal-botoes {
+        display: flex;
+        gap: 10px;
+    }
+
+    .modal-confirmacao .modal-botoes > * {
+        flex: 1;
+    }
+
+    .modal-confirmacao .btn-modal {
+        min-height: 44px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .modal-confirmacao .btn-modal-cancelar {
+        border: 1px solid #d5ded6;
+        background: #fff;
+        color: #536157;
+    }
+
+    .modal-confirmacao .btn-modal-cancelar:hover {
+        background: #f3f7f3;
+    }
+
+    .modal-confirmacao .btn-modal-confirmar {
+        border: none;
+        color: #fff;
+    }
+
+    .modal-confirmacao.tipo-aprovar .btn-modal-confirmar { background: #218044; }
+    .modal-confirmacao.tipo-recusar .btn-modal-confirmar { background: #c43d3d; }
+
+    .modal-confirmacao .btn-modal-confirmar:disabled {
+        opacity: .6;
+        cursor: wait;
+    }
 
     @media (max-width: 700px) {
         .admin-eventos .inst-page-head {
@@ -333,6 +458,7 @@ $abas = [
 'concluido' => 'Concluídos',
 'cancelado' => 'Cancelados',
 'pendente' => 'Solicitações',
+'recusado' => 'recusado',  
 ];
 
 $rotulos = [
@@ -340,6 +466,7 @@ $rotulos = [
 'em_andamento' => 'Em andamento',
 'concluido' => 'Concluído',
 'cancelado' => 'Cancelado',
+'recusado' => 'recusado',  
 'pendente' => 'Pendente',
 ];
 
@@ -349,6 +476,7 @@ $classes = [
 'concluido' => 'encerrado',
 'cancelado' => 'cancelado',
 'pendente' => 'pendente',
+'recusado' => 'recusado',  
 ];
 @endphp
 
@@ -489,52 +617,40 @@ $classes = [
                                 </a>
 
                                 {{-- Ações exclusivas das solicitações --}}
-                                @if($e->statusEvento === 'pendente')
+                               @if($e->statusEvento === 'pendente')
 
-                                {{-- Aprovar --}}
-                                <form action="{{ route('admin.eventos.aprovar', $e->idEvento) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Deseja aprovar este evento?')">
-                                    @csrf
-                                    @method('PATCH')
+    {{-- Aprovar --}}
+    <button type="button"
+        class="btn-acao btn-aprovar"
+        title="Aprovar solicitação"
+        aria-label="Aprovar solicitação"
+        data-tipo="aprovar"
+        data-url="{{ route('admin.eventos.aprovar', $e->idEvento) }}"
+        data-evento="{{ $e->nomeEvento }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 12 2 2 4-4" />
+            <path d="M12 3a9 9 0 1 0 9 9" />
+            <path d="M16 5h5v5" />
+        </svg>
+    </button>
 
-                                    <button type="submit"
-                                        class="btn-acao btn-aprovar"
-                                        title="Aprovar solicitação"
-                                        aria-label="Aprovar solicitação">
+    {{-- Recusar --}}
+    <button type="button"
+        class="btn-acao btn-recusar"
+        title="Recusar solicitação"
+        aria-label="Recusar solicitação"
+        data-tipo="recusar"
+        data-url="{{ route('admin.eventos.recusar', $e->idEvento) }}"
+        data-evento="{{ $e->nomeEvento }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+        </svg>
+    </button>
 
-                                        <svg viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="m9 12 2 2 4-4" />
-                                            <path d="M12 3a9 9 0 1 0 9 9" />
-                                            <path d="M16 5h5v5" />
-                                        </svg>
-                                    </button>
-                                </form>
-
-                                {{-- Recusar --}}
-                                <form action="{{ route('admin.eventos.recusar', $e->idEvento) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Deseja recusar esta solicitação?')">
-                                    @csrf
-                                    @method('PATCH')
-
-                                    <button type="submit"
-                                        class="btn-acao btn-recusar"
-                                        title="Recusar solicitação"
-                                        aria-label="Recusar solicitação">
-
-                                        <svg viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M18 6 6 18" />
-                                            <path d="m6 6 12 12" />
-                                        </svg>
-                                    </button>
-                                </form>
-
-                                @endif
+@endif
 
                             </div>
                         </td>
@@ -569,5 +685,99 @@ $classes = [
     @endif
 
 </div>
+
+{{-- MODAL DE CONFIRMAÇÃO --}}
+<div class="modal-confirmacao" id="modalConfirmacao" role="dialog" aria-modal="true"
+    aria-labelledby="modalTitulo" aria-hidden="true">
+    <div class="modal-caixa">
+
+        <div class="modal-icone" id="modalIcone"></div>
+
+        <h2 class="modal-titulo" id="modalTitulo"></h2>
+        <p class="modal-texto" id="modalTexto"></p>
+
+        <form method="POST" id="modalForm">
+            @csrf
+            @method('PATCH')
+
+            <div class="modal-botoes">
+                <button type="button" class="btn-modal btn-modal-cancelar" id="modalCancelar">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-modal btn-modal-confirmar" id="modalConfirmar"></button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal     = document.getElementById('modalConfirmacao');
+    const form      = document.getElementById('modalForm');
+    const titulo    = document.getElementById('modalTitulo');
+    const texto     = document.getElementById('modalTexto');
+    const icone     = document.getElementById('modalIcone');
+    const confirmar = document.getElementById('modalConfirmar');
+
+    const iconeAprovar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    const iconeRecusar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+
+    function abrir(botao) {
+        const tipo   = botao.dataset.tipo;
+        const evento = botao.dataset.evento;
+
+        form.action = botao.dataset.url;
+        modal.classList.remove('tipo-aprovar', 'tipo-recusar');
+        modal.classList.add('tipo-' + tipo);
+
+        texto.textContent = '';
+        const nome = document.createElement('strong');
+        nome.textContent = evento;
+
+        if (tipo === 'aprovar') {
+            titulo.textContent    = 'Aprovar evento?';
+            icone.innerHTML       = iconeAprovar;
+            confirmar.textContent = 'Sim, aprovar';
+            texto.append('O evento ', nome, ' será publicado e ficará visível para os usuários do aplicativo.');
+        } else {
+            titulo.textContent    = 'Recusar solicitação?';
+            icone.innerHTML       = iconeRecusar;
+            confirmar.textContent = 'Sim, recusar';
+            texto.append('A solicitação do evento ', nome, ' será recusada e não será divulgada.');
+        }
+
+        confirmar.disabled = false;
+        modal.classList.add('aberto');
+        modal.setAttribute('aria-hidden', 'false');
+        confirmar.focus();
+    }
+
+    function fechar() {
+        modal.classList.remove('aberto');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.querySelectorAll('[data-tipo][data-url]').forEach(function (botao) {
+        botao.addEventListener('click', function () { abrir(botao); });
+    });
+
+    document.getElementById('modalCancelar').addEventListener('click', fechar);
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) fechar();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('aberto')) fechar();
+    });
+
+    // evita duplo clique
+    form.addEventListener('submit', function () {
+        confirmar.disabled = true;
+        confirmar.textContent = 'Aguarde...';
+    });
+})();
+</script>
 
 @endsection

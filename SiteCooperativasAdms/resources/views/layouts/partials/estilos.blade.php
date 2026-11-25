@@ -27,6 +27,19 @@ html, body, input, select, textarea, button {
   font-feature-settings: "lnum" 1;
 }
 
+/* Esconde a barra de rolagem, mantendo a rolagem funcionando */
+html, body {
+  -ms-overflow-style: none;   /* Edge/IE antigo */
+  scrollbar-width: none;      /* Firefox e navegadores atuais */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;              /* Chrome, Edge, Safari */
+  width: 0;
+  height: 0;
+}
+
     html,
     body {
       margin: 0;
@@ -392,21 +405,21 @@ html, body, input, select, textarea, button {
     }
 
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 11px 13px;
-      border-radius: 10px;
-      font-size: 13.5px;
-      color: #b9cabf;
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      width: 100%;
-      text-align: left;
-      transition: background .15s, color .15s;
-      text-decoration:none;
-    }
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;               /* era 11px 13px */
+  border-radius: 10px;
+  font-size: 13.5px;
+  color: #b9cabf;
+  cursor: pointer;
+  border: 2px solid transparent;   /* era border: none; */
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background .15s, color .15s;
+  text-decoration: none;
+}
 
     .nav-item .ic {
       width: 17px;
@@ -440,9 +453,9 @@ html, body, input, select, textarea, button {
     }
 
     .nav-item.active {
-      color: #fff;
-      box-shadow: inset 3px 0 0 var(--green-1);
-    }
+  color: #fff;
+  border-color: var(--sidebar-active);
+}
 
     .nav-item.active .ic {
       opacity: 1;
@@ -460,7 +473,7 @@ html, body, input, select, textarea, button {
       background: var(--sidebar-bg-2);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+       justify-content: flex-end;
       padding: 18px 36px;
       border-bottom: 1px solid var(--border);
       gap: 16px;
@@ -1356,4 +1369,15 @@ html, body, input, select, textarea, button {
       padding: 4px 10px;
       border-radius: 8px;
     }
+
+    .icon-btn.text-btn {
+    width: auto;
+    min-width: 85px;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+}
 </style>

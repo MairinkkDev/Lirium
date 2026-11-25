@@ -1,10 +1,234 @@
-@extends('layouts.instituicao')
+@extends('layouts.instituicao') 
 
 @section('titulo', 'Avaliações do evento')
+@push('estilos')
+<style>
+  /* ===== Avaliações do evento: tudo um pouco maior e mais visível ===== */
 
+  .inst-aval { width: 100%; }
+
+  .inst-aval .inst-aval-titulo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 30px !important;
+    font-weight: 750;
+    line-height: 1.2;
+    color: #14281b;
+  }
+
+  .inst-aval .chip-status {
+    padding: 7px 15px !important;
+    font-size: 14px !important;
+    font-weight: 700;
+  }
+
+  .inst-aval .inst-aval-sub {
+    margin-top: 8px;
+    margin-bottom: 26px;
+    font-size: 16px !important;
+    color: #4d5c52;
+  }
+
+  .inst-aval .inst-card {
+    padding: 30px 34px;
+    border-radius: 14px;
+  }
+
+  /* ----- resumo ----- */
+  .inst-aval .aval-resumo { gap: 48px; }
+
+  .inst-aval .aval-rotulo {
+    margin-bottom: 12px;
+    font-size: 16px !important;
+    font-weight: 700;
+    color: #26382c;
+  }
+
+  .inst-aval .aval-nota strong {
+    font-size: 64px !important;
+    font-weight: 800;
+    line-height: 1;
+    color: #14281b;
+  }
+
+  .inst-aval .aval-nota span {
+    font-size: 22px !important;
+    font-weight: 600;
+    color: #5f6e64;
+  }
+
+  .inst-aval .aval-base {
+    margin-top: 10px;
+    font-size: 15px !important;
+    color: #4d5c52;
+  }
+
+  /* ----- estrelas (apagadas em cinza, acesas em dourado) ----- */
+  .inst-aval .aval-estrelas {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 10px 0;
+  }
+
+  .inst-aval .aval-estrelas svg {
+    width: 28px !important;
+    height: 28px !important;
+    fill: #d3d9d5;
+  }
+
+  .inst-aval .aval-estrelas svg.on { fill: #f2a900; }
+
+  .inst-aval .aval-estrelas .num {
+    margin-left: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #26382c;
+  }
+
+  /* ----- distribuição ----- */
+  .inst-aval .aval-dist { display: flex; flex-direction: column; gap: 14px; }
+
+  .inst-aval .aval-linha {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 14px;
+    font-size: 16px;
+  }
+
+  .inst-aval .aval-linha .estrela {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px !important;
+    font-weight: 700;
+    color: #26382c;
+  }
+
+  .inst-aval .aval-linha .estrela svg {
+    width: 18px !important;
+    height: 18px !important;
+    fill: #f2a900;
+  }
+
+  .inst-aval .aval-barra {
+    display: block;
+    height: 14px !important;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e3e7e5;
+  }
+
+  .inst-aval .aval-barra i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #1f7a43;
+  }
+
+  .inst-aval .aval-qtd {
+    font-size: 16px !important;
+    font-weight: 700;
+    text-align: right;
+    color: #26382c;
+  }
+
+  /* ----- lista ----- */
+  .inst-aval .aval-lista-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .inst-aval .aval-lista-head h2 {
+    font-size: 21px !important;
+    font-weight: 750;
+    color: #14281b;
+  }
+
+  .inst-aval .aval-filtro {
+    min-height: 44px;
+    padding: 9px 16px;
+    font-size: 15px !important;
+    border-radius: 9px;
+  }
+
+  .inst-aval .aval-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 22px 0;
+  }
+
+  .inst-aval .aval-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 19px !important;
+    font-weight: 700;
+    border-radius: 50%;
+  }
+
+  .inst-aval .aval-topo {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .inst-aval .aval-topo strong {
+    font-size: 18px !important;
+    font-weight: 700;
+    color: #14281b;
+  }
+
+  .inst-aval .aval-topo .data {
+    font-size: 14px !important;
+    color: #5f6e64;
+  }
+
+  .inst-aval .aval-item .aval-estrelas svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .inst-aval .aval-texto {
+    margin-top: 6px;
+    font-size: 16px !important;
+    line-height: 1.6;
+    color: #2b3a30;
+  }
+
+  .inst-aval .aval-vazio {
+    padding: 40px 0;
+    font-size: 17px !important;
+    text-align: center;
+    color: #5f6e64;
+  }
+
+  .inst-voltar { font-size: 16px; }
+  .inst-voltar svg { width: 20px; height: 20px; }
+
+  @media (max-width: 700px) {
+    .inst-aval .inst-aval-titulo { font-size: 24px !important; }
+    .inst-aval .inst-card { padding: 22px 20px; }
+    .inst-aval .aval-nota strong { font-size: 52px !important; }
+    .inst-aval .aval-estrelas svg { width: 24px !important; height: 24px !important; }
+    .inst-aval .aval-lista-head { flex-wrap: wrap; }
+  }
+</style>
+@endpush
 @section('content')
   {{-- Recebe do EventoController@avaliacoes:
-       $evento       -> nome, inicio, fim, status
+       $dadosEvento       -> nome, inicio, fim, status
        $distribuicao -> [5 => qtd, 4 => qtd, 3 => qtd, 2 => qtd, 1 => qtd]
        $avaliacoes   -> lista com nome, data, nota e comentario
        A média e o total são calculados aqui a partir da distribuição. --}}
@@ -38,7 +262,7 @@
 
     $rotulosStatus = ['agendado' => 'Agendado', 'em_andamento' => 'Em andamento', 'concluido' => 'Encerrado', 'cancelado' => 'Cancelado'];
     $classesStatus = ['agendado' => 'agendado', 'em_andamento' => 'andamento', 'concluido' => 'encerrado', 'cancelado' => 'encerrado'];
-    $statusEvento  = $evento['status'] ?? 'concluido';
+    $statusEvento  = $dadosEvento['status'] ?? 'concluido';
   @endphp
 
   <a class="inst-voltar" href="{{ route('evento.painel') }}">
@@ -52,12 +276,12 @@
   <div class="inst-aval">
 
     <h1 class="inst-aval-titulo">
-      {{ $evento['nome'] }}
+      {{ $dadosEvento['nome'] }}
       <span class="chip-status {{ $classesStatus[$statusEvento] ?? 'encerrado' }}">
         {{ $rotulosStatus[$statusEvento] ?? $statusEvento }}
       </span>
     </h1>
-    <p class="inst-aval-sub">{{ $evento['inicio'] }} a {{ $evento['fim'] }} · Avaliações dos usuários</p>
+    <p class="inst-aval-sub">{{ $dadosEvento['inicio'] }} a {{ $dadosEvento['fim'] }} · Avaliações dos usuários</p>
 
     {{-- Resumo --}}
     <div class="inst-card">

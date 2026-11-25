@@ -108,7 +108,7 @@
                         <div class="grid">
                             {{ $campo('c6', 'nomeInstituicao', 'Nome da instituição', 'inst', 'text', 150) }}
                             {{ $campo('c3', 'cnpjInstituicao', 'CNPJ', 'cnpj', 'text', 18) }}
-                            {{ $campo('c3', 'numTelefoneInstituicao', 'Telefone de contato', 'tel', 'tel', 20) }}
+                            {{ $campo('c3', 'numTelefoneInstituicao', 'Telefone de contato', 'tel', 'tel', 15) }}
                         </div>
                     </section>
 
@@ -253,8 +253,6 @@
 }
 
 /* ===== SEÇÕES ===== */
-
-
 
 .cadastro-card .secao-titulo {
     margin: 0 0 8px;
@@ -467,6 +465,38 @@ function togglePass(id) {
     const campo = document.getElementById(id);
     campo.type = campo.type === 'password' ? 'text' : 'password';
 }
+
+/* ===== Máscaras: CNPJ, telefone, CEP e UF ===== */
+const soNumeros = v => v.replace(/\D/g, '');
+
+const mascaras = {
+    cnpjInstituicao: v => {
+        v = soNumeros(v).slice(0, 14);
+        return v.replace(/^(\d{2})(\d)/, '$1.$2')
+                .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                .replace(/\.(\d{3})(\d)/, '.$1/$2')
+                .replace(/(\d{4})(\d)/, '$1-$2');
+    },
+    numTelefoneInstituicao: v => {
+        v = soNumeros(v).slice(0, 11);
+        if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+        if (v.length > 6)  return v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+        if (v.length > 2)  return v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+        return v ? '(' + v : '';
+    },
+    cepEnderecoInstituicao: v => {
+        v = soNumeros(v).slice(0, 8);
+        return v.replace(/^(\d{5})(\d)/, '$1-$2');
+    },
+    ufEnderecoInstituicao: v => v.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2),
+};
+
+Object.entries(mascaras).forEach(([nome, fn]) => {
+    const campo = document.querySelector('[name="' + nome + '"]');
+    if (!campo) return;
+    campo.value = fn(campo.value);                       // aplica ao recarregar com old()
+    campo.addEventListener('input', () => campo.value = fn(campo.value));
+});
 </script>
 
 @endsection

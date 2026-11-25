@@ -1,4 +1,4 @@
-@extends('layouts.instituicao')
+@extends(auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.instituicao')
 
 @section('titulo', 'Editar perfil')
 
@@ -42,10 +42,6 @@
     $partes   = preg_split('/\s+/', trim($p['nomeCurto']));
     $iniciais = mb_strtoupper(mb_substr($partes[0], 0, 1) . (count($partes) > 1 ? mb_substr(end($partes), 0, 1) : mb_substr($partes[0], 1, 1)));
   @endphp
-
-  @if(session('mensagem'))
-    <div class="alert-ok">{{ session('mensagem') }}</div>
-  @endif
 
   <div class="perfil-card">
 
@@ -156,7 +152,10 @@
 
       <div class="perfil-acoes">
         <button type="submit" class="perfil-btn salvar">Salvar</button>
-        <a href="{{ url('/estoque') }}" class="perfil-btn cancelar">Cancelar</a>
+       <a href="{{ auth()->user()->isAdmin() ? route('admin.home') : url('/estoque') }}"
+   class="perfil-btn cancelar">
+    Cancelar
+</a>
       </div>
     </form>
 
@@ -181,6 +180,119 @@
     .alert-ok { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; background: #dff5e3; color: #1b5e2b; }
     .perfil-foto-mini, .perfil-avatar { overflow: hidden; }
     .perfil-foto-mini img, .perfil-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+
+    /* ===== Aumento de tamanho da tela de perfil ===== */
+
+    .perfil-card { width: 100%; max-width: none; }
+
+    .perfil-titulo {
+      font-size: 30px !important;
+      font-weight: 750;
+      margin-bottom: 26px;
+    }
+
+    /* campos de nome e e-mail */
+    .perfil-campos { gap: 20px; }
+
+    .perfil-campo {
+      min-height: 60px;
+      padding: 0 18px;
+      gap: 14px;
+      border-radius: 12px;
+    }
+
+    .perfil-campo svg {
+      width: 28px !important;
+      height: 28px !important;
+      flex-shrink: 0;
+    }
+
+    .perfil-campo input {
+      font-size: 17px !important;
+      font-weight: 500;
+    }
+
+    /* bloco de endereço */
+    .perfil-bloco { padding: 22px 24px; border-radius: 12px; }
+
+    .perfil-bloco-cab {
+      gap: 12px;
+      margin-bottom: 18px;
+      font-size: 18px !important;
+      font-weight: 700;
+    }
+
+    .perfil-bloco-cab svg { width: 26px !important; height: 26px !important; }
+
+    .perfil-end-grid { gap: 16px; }
+
+    .perfil-end-grid label {
+      margin-bottom: 6px;
+      font-size: 15px !important;
+      font-weight: 700;
+    }
+
+    .perfil-end-grid input,
+    .perfil-end-grid select {
+      min-height: 48px;
+      padding: 10px 14px;
+      font-size: 16px !important;
+      border-radius: 9px;
+    }
+
+    /* foto */
+    .perfil-foto {
+      gap: 14px;
+      font-size: 17px !important;
+      font-weight: 600;
+    }
+
+    .perfil-foto-mini {
+      width: 52px !important;
+      height: 52px !important;
+      font-size: 18px !important;
+      flex-shrink: 0;
+    }
+
+    .perfil-foto-nome { font-size: 14px !important; }
+
+    /* botões */
+    .perfil-acoes { gap: 16px; margin-top: 8px; }
+
+    .perfil-btn {
+      min-height: 52px;
+      padding: 0 34px !important;
+      font-size: 17px !important;
+      font-weight: 700;
+      border-radius: 12px;
+    }
+
+    /* lateral com resumo */
+    .perfil-avatar {
+      width: 150px !important;
+      height: 150px !important;
+      font-size: 46px !important;
+    }
+
+    .perfil-lateral h2 {
+      margin-top: 18px;
+      font-size: 24px !important;
+      font-weight: 750;
+    }
+
+    .perfil-lateral p {
+      font-size: 17px !important;
+      line-height: 1.5;
+    }
+
+    /* mensagens de erro */
+    .perfil-card .inst-erro { font-size: 14px !important; }
+
+    @media (max-width: 700px) {
+      .perfil-titulo { font-size: 25px !important; }
+      .perfil-avatar { width: 110px !important; height: 110px !important; font-size: 36px !important; }
+      .perfil-btn { padding: 0 22px !important; }
+    }
   </style>
 
   <script>

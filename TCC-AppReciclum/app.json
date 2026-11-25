@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "TCC",
+    "name": "Reciclum",
     "slug": "TCC",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
@@ -24,39 +24,51 @@
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-maps",
-        {
-          "requestLocationPermission": true,
-          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Permitir que o TCC use sua câmera",
-          "microphonePermission": "Permitir que o TCC use seu microfone"
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Permitir que o TCC acesse suas fotos"
-        }
-      ],
-      "expo-font"
-    ],
+  [
+    "expo-maps",
+    {
+      "requestLocationPermission": true,
+      "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
+    }
+  ],
+  [
+    "expo-camera",
+    {
+      "cameraPermission": "Permitir que o TCC use sua câmera",
+      "microphonePermission": "Permitir que o TCC use seu microfone"
+    }
+  ],
+  [
+    "expo-image-picker",
+    {
+      "photosPermission": "Permitir que o TCC acesse suas fotos"
+    }
+  ],
+  "expo-font",
+  [
+    "expo-splash-screen",
+    {
+      "backgroundColor": "#10541b",
+      "image": "./assets/logo.png",
+      "imageWidth": 200,
+      "resizeMode": "contain"
+    }
+  ]
+],
     "extra": {
       "eas": {
-        "projectId": "9035bd77-7503-426c-9729-7b3ef461c953"
+        "projectId": "64bae50b-7945-468c-993e-84baf0d46e7b"
       }
-    }
+    },
+    "owner": "pedrinhodev"
   }
 }

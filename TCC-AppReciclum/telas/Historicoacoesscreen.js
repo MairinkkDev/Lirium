@@ -20,7 +20,6 @@ import BottomTabBar from './components/BottomTabBar';
 const FILTROS = [
   { key: 'todos', label: 'Todos' },
   { key: 'evento', label: 'Evento' },
-  { key: 'denuncia', label: 'Denúncia' },
   { key: 'reciclagem', label: 'Reciclagem' },
 ];
 

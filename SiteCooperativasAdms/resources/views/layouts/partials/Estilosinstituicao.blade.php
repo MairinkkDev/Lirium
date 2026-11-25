@@ -19,6 +19,18 @@
     font-weight: 500;
   }
 
+  /* Esconde a barra de rolagem, mantendo a rolagem funcionando */
+html, body {
+  -ms-overflow-style: none;   /* Edge/IE antigo */
+  scrollbar-width: none;      /* Firefox e navegadores atuais */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;              /* Chrome, Edge, Safari */
+  width: 0;
+  height: 0;
+}
   /* ============ CARDS DE RESUMO ============ */
   .inst-stats {
     display: grid;

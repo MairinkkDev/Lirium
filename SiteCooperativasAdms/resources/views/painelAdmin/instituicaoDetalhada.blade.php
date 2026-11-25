@@ -316,17 +316,6 @@
 
         @endif
 
-        <form action="{{ route('instituicao.excluir', $instituicao->idInstituicao) }}"
-            method="POST"
-            data-confirmar="Excluir a instituição {{ $instituicao->nomeInstituicao }}? Esta ação não pode ser desfeita.">
-            @csrf
-            @method('DELETE')
-
-            <button type="submit" class="btn-form excluir">
-                Excluir instituição
-            </button>
-        </form>
-
     </div>
 
 </div>

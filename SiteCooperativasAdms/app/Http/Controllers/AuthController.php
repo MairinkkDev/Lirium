@@ -27,13 +27,24 @@ class AuthController extends Controller
 
     public function cadastrar(Request $request)
     {
-        // Remove a máscara do telefone antes de validar e salvar.
+        // Padroniza os formatos antes de validar (assim o "unique" funciona de verdade)
+        $cnpj = preg_replace('/\D/', '', (string) $request->input('cnpjInstituicao'));
+        $cep  = preg_replace('/\D/', '', (string) $request->input('cepEnderecoInstituicao'));
+
         $request->merge([
+            'cnpjInstituicao' => strlen($cnpj) === 14
+                ? preg_replace('/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/', '$1.$2.$3/$4-$5', $cnpj)
+                : $cnpj,
+
             'numTelefoneInstituicao' => preg_replace(
                 '/\D/',
                 '',
-                $request->input('numTelefoneInstituicao', '')
+                (string) $request->input('numTelefoneInstituicao')
             ),
+
+            'cepEnderecoInstituicao' => strlen($cep) === 8
+                ? substr($cep, 0, 5) . '-' . substr($cep, 5)
+                : ($cep !== '' ? $cep : null),
         ]);
 
         // Validar os dados recebidos do formulário.
@@ -51,8 +62,7 @@ class AuthController extends Controller
 
             'cnpjInstituicao' => [
                 'required',
-                'string',
-                'max:18',
+                'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/',
                 'unique:tb_instituicao,cnpjInstituicao'
             ],
 
@@ -71,7 +81,8 @@ class AuthController extends Controller
 
             'numTelefoneInstituicao' => [
                 'required',
-                'digits_between:10,11'
+                'digits_between:10,11',
+                'unique:tb_telefone_instituicao,numTelefoneInstituicao'
             ],
 
             'senhaUsuario' => [
@@ -87,7 +98,7 @@ class AuthController extends Controller
             // Endereço opcional.
             'cepEnderecoInstituicao' => [
                 'nullable',
-                'regex:/^\d{5}-?\d{3}$/'
+                'regex:/^\d{5}-\d{3}$/'
             ],
 
             'logradouroEnderecoInstituicao' => [
@@ -126,10 +137,17 @@ class AuthController extends Controller
                 'size:2'
             ],
         ], [
-            'numTelefoneInstituicao.required' => 'Informe o telefone da organização.',
+            'cnpjInstituicao.regex'  => 'Informe um CNPJ válido (14 números).',
+            'cnpjInstituicao.unique' => 'Já existe uma instituição cadastrada com este CNPJ.',
+
+            'emailUsuario.unique' => 'Este e-mail já está cadastrado.',
+
+            'numTelefoneInstituicao.required'       => 'Informe o telefone da organização.',
             'numTelefoneInstituicao.digits_between' => 'O telefone deve possuir DDD e número válido.',
-            'cepEnderecoInstituicao.regex' => 'Informe um CEP válido.',
-            'ufEnderecoInstituicao.size' => 'Informe a sigla do estado com 2 letras.',
+            'numTelefoneInstituicao.unique'         => 'Este telefone já está cadastrado em outra instituição.',
+
+            'cepEnderecoInstituicao.regex' => 'Informe um CEP válido (00000-000).',
+            'ufEnderecoInstituicao.size'   => 'Informe a sigla do estado com 2 letras.',
         ]);
 
         // Buscar o tipo de instituição.
@@ -153,17 +171,17 @@ class AuthController extends Controller
             // Cadastrar instituição.
             $instituicao = Instituicao::create([
                 'idTipoInstituicao' => $tipoInstituicao->idTipoInstituicao,
-                'nomeInstituicao' => $dados['nomeInstituicao'],
-                'cnpjInstituicao' => $dados['cnpjInstituicao'],
-                'emailInstituicao' => $dados['emailUsuario'],
+                'nomeInstituicao'   => $dados['nomeInstituicao'],
+                'cnpjInstituicao'   => $dados['cnpjInstituicao'],
+                'emailInstituicao'  => $dados['emailUsuario'],
                 'statusInstituicao' => 'ativo',
             ]);
 
             // Cadastrar usuário responsável.
             Usuario::create([
-                'nomeUsuario' => $dados['nomeUsuario'],
-                'emailUsuario' => $dados['emailUsuario'],
-                'senhaUsuario' => Hash::make($dados['senhaUsuario']),
+                'nomeUsuario'   => $dados['nomeUsuario'],
+                'emailUsuario'  => $dados['emailUsuario'],
+                'senhaUsuario'  => Hash::make($dados['senhaUsuario']),
                 'statusUsuario' => 'ativo',
                 'idNivelAcesso' => $nivelAcesso->idNivelAcesso,
                 'idInstituicao' => $instituicao->idInstituicao,
@@ -174,7 +192,7 @@ class AuthController extends Controller
 
             $telefone->forceFill([
                 'numTelefoneInstituicao' => $dados['numTelefoneInstituicao'],
-                'idInstituicao' => $instituicao->idInstituicao,
+                'idInstituicao'          => $instituicao->idInstituicao,
             ])->save();
 
             // Verificar se algum campo do endereço foi preenchido.
@@ -202,16 +220,16 @@ class AuthController extends Controller
                 $endereco = new EnderecoInstituicao();
 
                 $endereco->forceFill([
-                    'cepEnderecoInstituicao' => $dados['cepEnderecoInstituicao'] ?? null,
-                    'logradouroEnderecoInstituicao' => $dados['logradouroEnderecoInstituicao'] ?? null,
-                    'numeroEnderecoInstituicao' => $dados['numeroEnderecoInstituicao'] ?? null,
+                    'cepEnderecoInstituicao'         => $dados['cepEnderecoInstituicao'] ?? null,
+                    'logradouroEnderecoInstituicao'  => $dados['logradouroEnderecoInstituicao'] ?? null,
+                    'numeroEnderecoInstituicao'      => $dados['numeroEnderecoInstituicao'] ?? null,
                     'complementoEnderecoInstituicao' => $dados['complementoEnderecoInstituicao'] ?? null,
-                    'bairroEnderecoInstituicao' => $dados['bairroEnderecoInstituicao'] ?? null,
-                    'cidadeEnderecoInstituicao' => $dados['cidadeEnderecoInstituicao'] ?? null,
-                    'ufEnderecoInstituicao' => isset($dados['ufEnderecoInstituicao'])
+                    'bairroEnderecoInstituicao'      => $dados['bairroEnderecoInstituicao'] ?? null,
+                    'cidadeEnderecoInstituicao'      => $dados['cidadeEnderecoInstituicao'] ?? null,
+                    'ufEnderecoInstituicao'          => isset($dados['ufEnderecoInstituicao'])
                         ? strtoupper($dados['ufEnderecoInstituicao'])
                         : null,
-                    'idInstituicao' => $instituicao->idInstituicao,
+                    'idInstituicao'                  => $instituicao->idInstituicao,
                 ])->save();
             }
         });

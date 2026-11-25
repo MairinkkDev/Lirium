@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export const API_URL = 'http://localhost:8000/api';
+export const API_URL = 'http://192.168.18.238:8001/api';
 const CHAVE_TOKEN = 'token';
 
 // Toda requisição pede JSON (sem isso o Laravel pode redirecionar em vez de dar 401)
@@ -47,10 +47,12 @@ export function UsuarioProvider({ children }) {
 
   // Chamado pela LoginScreen quando o login dá certo (200)
   const entrar = async (token, dadosUsuario) => {
-    await AsyncStorage.setItem(CHAVE_TOKEN, token);
-    aplicarToken(token);
-    setUsuario(dadosUsuario);
-  };
+  console.log('ENTRAR token:', token ? token.substring(0, 12) + '...' : token);
+  console.log('ENTRAR usuario:', dadosUsuario);
+  await AsyncStorage.setItem(CHAVE_TOKEN, token);
+  aplicarToken(token);
+  setUsuario(dadosUsuario);
+};
 
   // Chamado pelo botão de sair
   const sair = async () => {

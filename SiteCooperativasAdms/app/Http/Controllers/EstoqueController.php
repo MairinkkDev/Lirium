@@ -9,6 +9,7 @@ use App\Models\ContribuicaoUsuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class EstoqueController extends Controller
 {
@@ -34,44 +35,66 @@ class EstoqueController extends Controller
     }
 
     public function painel()
-    {
-        $inst = $this->instituicaoLogada();
+{
+    $inst = $this->instituicaoLogada();
 
-        $estoques = EstoqueInstituicao::with('material')
-            ->where('idInstituicao', $inst->idInstituicao)
-            ->get();
+    $estoques = EstoqueInstituicao::with('material')
+        ->where('idInstituicao', $inst->idInstituicao)
+        ->get();
 
-        $precos = PrecoMaterialInstituicao::with('material')
-            ->where('idInstituicao', $inst->idInstituicao)
-            ->get();
+    $precos = PrecoMaterialInstituicao::with('material')
+        ->where('idInstituicao', $inst->idInstituicao)
+        ->get();
 
-        $materiais = $estoques->map(fn ($e) => [
-            'id'          => $e->idMaterialReciclavel,
-            'nome'        => $e->material->nomeMaterialReciclavel,
-            'quantidade'  => (float) $e->quantidadeKg,
-            'atualizacao' => $e->updated_at?->format('d/m/Y') ?? '-',
-        ])->sortBy('nome')->values()->all();
+    $materiais = $estoques->map(fn ($e) => [
+        'id'          => $e->idMaterialReciclavel,
+        'nome'        => $e->material->nomeMaterialReciclavel,
+        'quantidade'  => (float) $e->quantidadeKg,
+        'atualizacao' => $e->updated_at?->format('d/m/Y') ?? '-',
+    ])->sortBy('nome')->values()->all();
 
-        $listaPrecos = $precos->map(fn ($p) => [
-            'id'    => $p->idMaterialReciclavel,
-            'nome'  => $p->material->nomeMaterialReciclavel,
-            'preco' => (float) $p->precoKg,
-        ])->sortBy('nome')->values()->all();
+    $listaPrecos = $precos->map(fn ($p) => [
+        'id'    => $p->idMaterialReciclavel,
+        'nome'  => $p->material->nomeMaterialReciclavel,
+        'preco' => (float) $p->precoKg,
+    ])->sortBy('nome')->values()->all();
 
-        $totalEstoque  = $estoques->sum('quantidadeKg');
-        $tiposMaterial = $estoques->count();
-        $entregasHoje  = ContribuicaoUsuario::where('idInstituicao', $inst->idInstituicao)
-            ->whereDate('created_at', today())
-            ->count();
+    $totalEstoque  = $estoques->sum('quantidadeKg');
+    $tiposMaterial = $estoques->count();
+    $entregasHoje  = ContribuicaoUsuario::where('idInstituicao', $inst->idInstituicao)
+        ->whereDate('created_at', today())
+        ->count();
 
-       
-        $catalogo = MaterialReciclavel::orderBy('nomeMaterialReciclavel')->get();
+    $catalogo = MaterialReciclavel::orderBy('nomeMaterialReciclavel')->get();
 
-        return view('painelInstituicao.estoque', compact(
-            'materiais', 'listaPrecos', 'totalEstoque',
-            'tiposMaterial', 'entregasHoje', 'catalogo'
-        ));
+    $primeiraEntrega = ContribuicaoUsuario::where('idInstituicao', $inst->idInstituicao)->min('created_at');
+
+    $inicio = Carbon::parse($inst->created_at ?? now());
+    if ($primeiraEntrega && Carbon::parse($primeiraEntrega)->lt($inicio)) {
+        $inicio = Carbon::parse($primeiraEntrega); 
     }
+    $inicio = $inicio->startOfMonth();
+    $fim    = now()->startOfMonth();
+
+    $porMes = ContribuicaoUsuario::where('idInstituicao', $inst->idInstituicao)
+        ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as mes, SUM(quantidadeKg) as total")
+        ->groupBy('mes')
+        ->pluck('total', 'mes');
+
+    $mesesLabel   = [];
+    $mesesValores = [];
+
+    for ($m = $inicio->copy(); $m->lte($fim); $m->addMonth()) {
+        $mesesLabel[]   = $m->format('m/Y');
+        $mesesValores[] = round((float) ($porMes[$m->format('Y-m')] ?? 0), 2);
+    }
+
+    return view('painelInstituicao.estoque', compact(
+        'materiais', 'listaPrecos', 'totalEstoque',
+        'tiposMaterial', 'entregasHoje', 'catalogo',
+        'mesesLabel', 'mesesValores'
+    ));
+}
 
    
     public function adicionar(Request $request)

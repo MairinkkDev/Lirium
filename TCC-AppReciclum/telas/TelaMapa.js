@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   View,
@@ -11,7 +11,10 @@ import {
   StatusBar,
   keyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
+import * as Location from 'expo-location';
 
 import AppHeader from './components/AppHeader';
 import BottomTabBar from './components/BottomTabBar';
@@ -21,7 +24,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
+// Mesmo mapa oficial de Ecopontos usado na tela MapaScreen
+const ECOPONTOS_MAP_URL =
+  'https://www.google.com/maps/d/embed?ehbc=2E312F&mid=1Kok7L5JyjXN758y3vy3kMsKYdJylrQE';
+
 export default function telaMapaOngs({navigation}) {
+  const [localizacao, setLocalizacao] = useState(null);
+  const [carregandoMapa, setCarregandoMapa] = useState(true);
+
+  // pega a localização do usuário para o preview já abrir centralizado nele
+  useEffect(() => {
+    async function obterLocalizacao() {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setLocalizacao({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+        }
+      } catch (error) {
+        console.log('Erro ao obter localização:', error);
+      } finally {
+        setCarregandoMapa(false);
+      }
+    }
+    obterLocalizacao();
+  }, []);
+
+  const mapaUrl = localizacao
+    ? `${ECOPONTOS_MAP_URL}&ll=${localizacao.latitude},${localizacao.longitude}&z=14`
+    : ECOPONTOS_MAP_URL;
+
   return (
     <View style={styles.container}>
        <AppHeader></AppHeader>  
@@ -77,15 +114,36 @@ export default function telaMapaOngs({navigation}) {
 
      {/*-----------------------MAPA ---------------*/}
     
-  <TouchableOpacity onPress={() => navigation.navigate('Mapa')} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Image
-          source={require('./assets/Mapa.png')}
-          style={styles.mapa}
-        />
-    </TouchableOpacity>
+   <TouchableOpacity
+    onPress={() => navigation.navigate('Mapa')}
+    activeOpacity={0.9}
+    style={styles.mapaPreview}
+  >
+    {carregandoMapa ? (
+      <View style={styles.mapaLoading}>
+        <ActivityIndicator size="large" color="#3fa63f" />
+      </View>
+    ) : (
+      <WebView
+        source={{ uri: mapaUrl }}
+        style={{ flex: 1 }}
+        scrollEnabled={false}
+        javaScriptEnabled
+        domStorageEnabled
+        originWhitelist={['*']}
+      />
+    )}
+
+    {/* camada transparente: o WebView não "rouba" o toque/rolagem e o card inteiro abre o mapa */}
+    <View style={StyleSheet.absoluteFill} />
+
+    <View style={styles.mapaExpandir}>
+      <Ionicons name="expand-outline" size={18} color="#0f5c2e" />
+    </View>
+  </TouchableOpacity>
         
         
-     {/*-----------------------agencias ---------------*/}
+     {/*
       
       <View style={styles.agenciasContainer}>
 
@@ -155,12 +213,12 @@ export default function telaMapaOngs({navigation}) {
       </TouchableOpacity>
 
       </View>
-
+          */}
 
       
       </ScrollView>
 
-      <BottomTabBar active="telaMapaOngs" navigation={navigation} />  
+      <BottomTabBar active="telaMapa" navigation={navigation} />  
     
     </View>
   );
@@ -188,11 +246,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
-  mapa: {
-    width: '100%',
-    height: 400,
-    resizeMode: 'contain',
+    mapaPreview: {
+    height: 320,
+    marginHorizontal: 12,
+    marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#e6f2e3',
+    borderWidth: 1,
+    borderColor: '#d9e8d4',
+  },
+  mapaLoading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mapaExpandir: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 10,
+    padding: 6,
   },
   agenciaItem: {
     width: '95%',

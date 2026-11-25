@@ -138,22 +138,31 @@ class InstituicaoController extends Controller
     }
 
     // Exclui uma instituição pelo painel.
-    public function excluir(string $idInstituicao)
-    {
-        abort_unless(Auth::user()->isAdmin(), 403);
+public function excluir(string $idInstituicao)
+{
+    abort_unless(Auth::user()->isAdmin(), 403);
 
-        $instituicao = Instituicao::where(
-            'idInstituicao',
-            $idInstituicao
-        )->firstOrFail();
+    $instituicao = Instituicao::where(
+        'idInstituicao',
+        $idInstituicao
+    )->firstOrFail();
 
+    DB::transaction(function () use ($instituicao) {
+
+        // Exclui o endereço.
+        $instituicao->endereco()->delete();
+
+        // Exclui os telefones.
+        $instituicao->telefones()->delete();
+
+        // Exclui a instituição.
         $instituicao->delete();
 
-        return back()->with(
-            'mensagem',
-            "Instituição #{$idInstituicao} excluída com sucesso."
-        );
-    }
+    });
+
+    return redirect()->route('admin.instituicoes')
+        ->with('sucesso', 'Instituição excluída com sucesso!');
+}
 
     // Abre a tela de edição.
     public function editar(string $idInstituicao)

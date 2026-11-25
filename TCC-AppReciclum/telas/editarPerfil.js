@@ -123,6 +123,10 @@ export default function EditarPerfilScreen({ navigation }) {
             source={require('../assets/logo.png')}
             style={styles.logoImage}
           />
+
+          <Text style={styles.Reciclum}>
+            Reciclum 
+          </Text>
         </View>
       </LinearGradient>
 
@@ -388,6 +392,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
+  },
+    Reciclum:{
+    fontSize: 24,
+    fontWeight: '500',
+    color: BG_CREAM,
+    letterSpacing: 1,
+    marginBottom: 28,
+    marginLeft: -5,
   },
   cancelarButtonText: {
     color: GREEN_DARK,

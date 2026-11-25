@@ -1,22 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  Alert,
-  StyleSheet,
+  SafeAreaView, ScrollView, View, Text, TextInput, TouchableOpacity,
+  ActivityIndicator, Modal, Alert, StyleSheet, Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { API_URL, useUsuario } from '../context/UsuarioContext';
 import BottomTabBar from './components/BottomTabBar';
-
+import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './components/AppHeader';
 
 const COR = {
   fundo: '#f5f4ea',
@@ -30,6 +23,28 @@ const COR = {
   estrelaVazia: '#b9bdb2',
   perigo: '#b3261e',
 };
+
+// Alert.alert não funciona no navegador (npm run web): lá usamos window.alert/confirm
+function avisar(titulo, mensagem) {
+  if (Platform.OS === 'web') {
+    window.alert(titulo + '\n\n' + mensagem);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+}
+
+function confirmar(titulo, mensagem, textoConfirmar, aoConfirmar) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(titulo + '\n\n' + mensagem)) {
+      aoConfirmar();
+    }
+    return;
+  }
+  Alert.alert(titulo, mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: textoConfirmar, style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 // os motivos que aparecem na denúncia
 const MOTIVOS = [
@@ -141,6 +156,9 @@ function CartaoAvaliacao({ evento, usuario }) {
   const [detalhes, setDetalhes] = useState('');
   const [erroDenuncia, setErroDenuncia] = useState('');
   const [enviandoDenuncia, setEnviandoDenuncia] = useState(false);
+  // apagar
+const [apagando, setApagando] = useState(false);
+const [erroApagar, setErroApagar] = useState('');
 
   //buscar as avaliações do evento 
 
@@ -160,7 +178,7 @@ function buscarAvaliacoes() {
       }
 
       setAvaliacoes(
-        lista.filter((a) => Number(a.idEvento) === idEvento)
+       lista.filter((a) => Number(a.idEvento) === Number(idEvento))
       );
     })
     .catch((err) => {
@@ -176,13 +194,10 @@ useEffect(() => {
   buscarAvaliacoes();
 }, []);
 
-// Verifica se a avaliação pertence ao usuário que está conectado.
-function ehMeu(avaliacao) {
-  if (!usuario) {
-    return false;
-  }
 
-  return avaliacao.idUsuario === usuario.idUsuario;
+function ehMeu(avaliacao) {
+  if (!usuario) return false;
+  return Number(avaliacao.idUsuario) === Number(usuario.idUsuario);
 }
 
   // enviar, editar e apagar 
@@ -255,24 +270,28 @@ function ehMeu(avaliacao) {
       });
   }
 
-  function apagarComentario(avaliacao) {
-    axios
-      .delete(API_URL + '/evento-avaliacoes/' + pegarId(avaliacao))
-      .then(() => {
-        setAvaliacoes(avaliacoes.filter((x) => pegarId(x) !== pegarId(avaliacao)));
-      })
-      .catch((err) => {
-        console.log('Erro ao apagar:', err.response ? err.response.data : err.message);
-        Alert.alert('Erro', 'Não foi possível apagar o comentário.');
-      });
-  }
+  function apagarComentario() {
+  const avaliacao = avaliacaoSelecionada;
+  if (!avaliacao) return;
 
-  function confirmarApagar(avaliacao) {
-    Alert.alert('Apagar comentário', 'Quer apagar a sua avaliação?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Apagar', style: 'destructive', onPress: () => apagarComentario(avaliacao) },
-    ]);
-  }
+  setApagando(true);
+  setErroApagar('');
+
+  axios
+    .delete(API_URL + '/evento-avaliacoes/' + pegarId(avaliacao))
+    .then(() => {
+      setAvaliacoes((atual) => atual.filter((x) => pegarId(x) !== pegarId(avaliacao)));
+      setPainel(null);
+    })
+    .catch((err) => {
+      const dados = err.response ? err.response.data : null;
+      console.log('Erro ao apagar:', err.response ? err.response.status : '', dados || err.message);
+      setErroApagar((dados && dados.message) || 'Não foi possível apagar o comentário.');
+    })
+    .finally(() => {
+      setApagando(false);
+    });
+}
 
   // painel que sobe de baixo 
 
@@ -283,25 +302,21 @@ function ehMeu(avaliacao) {
   }
 
   function fecharPainel() {
-    if (enviandoDenuncia) {
-      return; // não deixa fechar no meio do envio
-    }
-    setPainel(null);
+  if (enviandoDenuncia || apagando) {
+    return; // não deixa fechar no meio do envio
   }
+  setPainel(null);
+}
 
   function escolherEditar() {
     setPainel(null);
     comecarEdicao(avaliacaoSelecionada);
   }
 
-  function escolherApagar() {
-    const avaliacao = avaliacaoSelecionada;
-    setPainel(null);
- 
-    setTimeout(() => {
-      confirmarApagar(avaliacao);
-    }, 250);
-  }
+function escolherApagar() {
+  setErroApagar('');
+  setPainel('apagar');
+}
 
   function escolherDenunciar() {
     setMotivo(null);
@@ -340,18 +355,18 @@ function ehMeu(avaliacao) {
   // formulário de nova avaliação (ou aviso de que já avaliou)
   function desenharFormulario() {
     if (carregandoLista) {
-      return null; u
+      return null; 
     }
 
-    const minhas = avaliacoes.filter((a) => ehMeu(a));
+ const jaAvaliei = avaliacoes.some((a) => ehMeu(a));
 
-    if (minhas.length > 0) {
-      return (
-        <View style={styles.caixa}>
-          <Text style={styles.caixaTitulo}>Você já avaliou este evento. Obrigado!</Text>
-        </View>
-      );
-    }
+if (jaAvaliei) {
+  return (
+    <View style={styles.caixa}>
+      <Text style={styles.caixaTitulo}>Você já avaliou este evento. Obrigado!</Text>
+    </View>
+  );
+}
 
     return (
       <View style={styles.caixa}>
@@ -393,6 +408,8 @@ function ehMeu(avaliacao) {
     const estaEditando = editandoId === id;
 
     return (
+
+      
       <View key={id} style={styles.avaliacao}>
         <View style={styles.avaliacaoTopo}>
           <View style={{ flex: 1 }}>
@@ -630,6 +647,43 @@ function ehMeu(avaliacao) {
               </ScrollView>
             ) : null}
 
+            {/* confirmação de apagar */}
+{painel === 'apagar' && avaliacaoSelecionada ? (
+  <View style={styles.sucesso}>
+    <View style={[styles.sucessoIcone, { backgroundColor: COR.perigo }]}>
+      <Ionicons name="trash" size={34} color="#ffffff" />
+    </View>
+
+    <Text style={styles.sucessoTitulo}>Apagar avaliação?</Text>
+    <Text style={styles.sucessoTexto}>
+      Sua nota e seu comentário serão removidos. Essa ação não pode ser desfeita.
+    </Text>
+
+    {erroApagar ? <Text style={styles.mensagemErro}>{erroApagar}</Text> : null}
+
+    <TouchableOpacity
+      style={[styles.botao, styles.botaoPerigo, { alignSelf: 'stretch' }]}
+      onPress={apagarComentario}
+      disabled={apagando}
+      activeOpacity={0.85}
+    >
+      {apagando ? (
+        <ActivityIndicator color="#ffffff" />
+      ) : (
+        <Text style={styles.botaoTexto}>Apagar</Text>
+      )}
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={{ alignItems: 'center', paddingVertical: 14 }}
+      onPress={fecharPainel}
+      disabled={apagando}
+    >
+      <Text style={styles.cancelarTexto}>Cancelar</Text>
+    </TouchableOpacity>
+  </View>
+) : null}
+
             {/* denúncia enviada */}
             {painel === 'sucesso' ? (
               <View style={styles.sucesso}>
@@ -658,94 +712,109 @@ function ehMeu(avaliacao) {
 
 
 
-export default function EventosScreen({ navigation }) {
+export default function EventosScreen({ navigation, route }) {
   const contexto = useUsuario();
   const usuario = contexto.usuario;
 
- 
-  const [aba, setAba] = useState('proximos'); 
-  const [eventos, setEventos] = useState([]); 
-  const [confirmados, setConfirmados] = useState([]); 
+  const [eventos, setEventos] = useState([]);
+  const [confirmados, setConfirmados] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
-  /* buscar dados na API */
+  const handleVoltar = () => {
+    if (navigation) navigation.goBack();
+  };
 
   function carregarEventos() {
-    setCarregando(true);
-    setErro('');
+  setCarregando(true);
+  setErro('');
 
-    axios
-      .get(API_URL + '/eventos')
-      .then((response) => {
-        setEventos(response.data);
-      })
-      .catch((err) => {
-        console.log('Erro ao buscar eventos:', err.message);
-        setErro('Não foi possível carregar os eventos.');
-      })
-      .finally(() => {
-        setCarregando(false);
-      });
+  axios
+    .get(API_URL + '/eventos')
+    .then((response) => {
+      console.log('API_URL:', API_URL);
+      console.log('TIPO:', typeof response.data);
+      console.log('INICIO:', String(response.data).substring(0, 300));
 
-    axios
-      .get(API_URL + '/minhas-participacoes')
-      .then((response) => {
-        setConfirmados(response.data);
-      })
-      .catch((err) => {
-        console.log('Erro ao buscar participações:', err.message);
-      });
-  }
+      if (!Array.isArray(response.data)) {
+        setErro('Resposta inválida do servidor.');
+        return;
+      }
+      setEventos(response.data);
+    })
+    .catch((err) => {
+      console.log('Erro ao buscar eventos:', err.message);
+      setErro('Não foi possível carregar os eventos.');
+    })
+    .finally(() => {
+      setCarregando(false);
+    });
 
-  useEffect(() => {
+  axios
+    .get(API_URL + '/minhas-participacoes')
+    .then((response) => {
+      console.log('PARTICIPACOES TIPO:', typeof response.data);
+      console.log('PARTICIPACOES INICIO:', String(response.data).substring(0, 300));
+
+      if (!Array.isArray(response.data)) {
+        return;
+      }
+      setConfirmados(response.data.map(Number));
+    })
+    .catch((err) => {
+      console.log('Erro ao buscar participações:', err.message);
+    });
+}
+
+useFocusEffect(
+  useCallback(() => {
     carregarEventos();
-  }, []);
-
-  /* presença */
+  }, [])
+);
 
   function mudarPresenca(evento) {
-    const id = evento.idEvento;
+    const id = Number(evento.idEvento);
 
     if (confirmados.includes(id)) {
-      // já tinha confirmado: cancela
       axios
         .delete(API_URL + '/eventos/' + id + '/participar')
         .then(() => {
-          setConfirmados(confirmados.filter((x) => x !== id));
+          setConfirmados((atual) => atual.filter((x) => x !== id));
         })
         .catch((err) => {
           console.log('Erro ao cancelar presença:', err.response ? err.response.data : err.message);
-          Alert.alert('Erro', 'Não foi possível cancelar a presença.');
+          avisar('Erro', 'Não foi possível cancelar a presença.');
         });
     } else {
-      // ainda não tinha: confirma
       axios
         .post(API_URL + '/eventos/' + id + '/participar')
         .then(() => {
-          setConfirmados(confirmados.concat([id]));
+          setConfirmados((atual) => atual.concat([id]));
         })
         .catch((err) => {
           console.log('Erro ao confirmar presença:', err.response ? err.response.data : err.message);
-          Alert.alert('Erro', 'Não foi possível confirmar a presença.');
+          avisar('Erro', 'Não foi possível confirmar a presença.');
         });
     }
   }
 
-  /* listas de cada aba  */
+  // ordem: evento destacado, em andamento, agendados, concluídos
+  const idDestaque = route?.params?.idEvento;
+  const ordem = { em_andamento: 0, agendado: 1, concluido: 2 };
 
-  const proximos = eventos.filter(
-    (e) => e.statusEvento === 'agendado' || e.statusEvento === 'em_andamento'
-  );
-
-  const participei = eventos.filter(
-    (e) => e.statusEvento === 'concluido' && confirmados.includes(e.idEvento)
-  );
-
-  // o que aparece na tela
+  const listaEventos = [...eventos].sort((a, b) => {
+    if (Number(a.idEvento) === Number(idDestaque)) return -1;
+    if (Number(b.idEvento) === Number(idDestaque)) return 1;
+    return (ordem[a.statusEvento] ?? 9) - (ordem[b.statusEvento] ?? 9);
+  });
 
   return (
     <SafeAreaView style={styles.tela}>
+      <AppHeader height={100} />
+      <TouchableOpacity style={styles.circleButton} onPress={handleVoltar} activeOpacity={0.85}>
+        <Ionicons name="chevron-back" size={20} color={GREEN_DARK} />
+      </TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
         <Text style={styles.titulo}>Eventos</Text>
         <Text style={styles.subtitulo}>Ações ambientais perto de você</Text>
@@ -754,42 +823,24 @@ export default function EventosScreen({ navigation }) {
           <Text style={styles.atualizar}>Atualizar lista</Text>
         </TouchableOpacity>
 
-        {/* as duas abas */}
-        <View style={styles.trilho}>
-          <TouchableOpacity
-            style={[styles.aba, aba === 'proximos' ? styles.abaAtiva : null]}
-            onPress={() => setAba('proximos')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.abaTexto, aba === 'proximos' ? styles.abaTextoAtivo : null]}>
-              Próximos
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.aba, aba === 'avaliar' ? styles.abaAtiva : null]}
-            onPress={() => setAba('avaliar')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.abaTexto, aba === 'avaliar' ? styles.abaTextoAtivo : null]}>
-              Participei · Avaliar
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {carregando ? (
           <ActivityIndicator size="large" color={COR.verde} style={{ marginTop: 40 }} />
         ) : null}
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
-        {/* ABA PRÓXIMOS */}
-        {aba === 'proximos' && !carregando && proximos.length === 0 ? (
-          <Text style={styles.vazio}>Nenhum evento agendado por enquanto.</Text>
+        {!carregando && !erro && listaEventos.length === 0 ? (
+          <Text style={styles.vazio}>Nenhum evento disponível por enquanto.</Text>
         ) : null}
 
-        {aba === 'proximos' &&
-          proximos.map((evento) => {
-            const confirmado = confirmados.includes(evento.idEvento);
+        {!carregando &&
+          listaEventos.map((evento) => {
+            const confirmado = confirmados.includes(Number(evento.idEvento));
+            const encerrado = evento.statusEvento === 'concluido';
+
+            // evento encerrado em que o usuário esteve presente: card de avaliação
+            if (encerrado && confirmado) {
+              return <CartaoAvaliacao key={evento.idEvento} evento={evento} usuario={usuario} />;
+            }
 
             return (
               <View key={evento.idEvento} style={styles.cardSombra}>
@@ -801,7 +852,7 @@ export default function EventosScreen({ navigation }) {
                     style={styles.faixa}
                   >
                     <Text style={styles.faixaTexto}>
-                      {evento.statusEvento.replace('_', ' ').toUpperCase()}
+                      {String(evento.statusEvento).replace('_', ' ').toUpperCase()}
                     </Text>
                   </LinearGradient>
 
@@ -830,34 +881,26 @@ export default function EventosScreen({ navigation }) {
 
                     <Text style={styles.descricao}>{evento.descricaoEvento}</Text>
 
-                    {/* verde = confirmou e Branco = já confirmou */}
-                    <TouchableOpacity
-                      style={confirmado ? [styles.botao, styles.botaoContorno] : styles.botao}
-                      onPress={() => mudarPresenca(evento)}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={confirmado ? styles.botaoContornoTexto : styles.botaoTexto}>
-                        {confirmado ? 'Presença confirmada ✓' : 'Confirmar presença'}
+                    {encerrado ? (
+                      <Text style={styles.vazio}>
+                        Este evento já foi encerrado. Só quem confirmou presença pode avaliar.
                       </Text>
-                    </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={confirmado ? [styles.botao, styles.botaoContorno] : styles.botao}
+                        onPress={() => mudarPresenca(evento)}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={confirmado ? styles.botaoContornoTexto : styles.botaoTexto}>
+                          {confirmado ? 'Presença confirmada ✓' : 'Confirmar presença'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </View>
             );
           })}
-
-        {/* ABA PARTICIPEI · AVALIAR */}
-        {aba === 'avaliar' && !carregando && participei.length === 0 ? (
-          <Text style={styles.vazio}>
-            Quando um evento em que você confirmou presença for concluído, ele aparece aqui
-            para você avaliar.
-          </Text>
-        ) : null}
-
-        {aba === 'avaliar' &&
-          participei.map((evento) => (
-            <CartaoAvaliacao key={evento.idEvento} evento={evento} usuario={usuario} />
-          ))}
       </ScrollView>
 
       <BottomTabBar active="inicio" navigation={navigation} />
@@ -1315,5 +1358,22 @@ const styles = StyleSheet.create({
     color: COR.perigo,
     textAlign: 'center',
     marginTop: 20,
+  },
+  circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e3e3dc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    marginLeft: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

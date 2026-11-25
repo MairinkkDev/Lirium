@@ -7,19 +7,19 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
+  Alert, Platform,
 } from 'react-native';
 
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUsuario, API_URL } from '../context/UsuarioContext';
-
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import BottomTabBar from './components/BottomTabBar';
+import AppHeader, { GREEN_DARK, GREEN_MAIN, BG_CREAM, GRAY_TEXT } from './components/AppHeader';
 
 // mesmas cores da tela AvaliacaoEvento
-const GREEN_DARK = '#0f5c2e';
+
 const COR = {
   fundo: '#f5f4ea',
   card: '#ffffff',
@@ -29,6 +29,25 @@ const COR = {
   texto: '#13261a',
   textoSuave: '#6b7468',
 };
+
+function avisar(titulo, mensagem) {
+  if (Platform.OS === 'web') {
+    window.alert(titulo + '\n\n' + mensagem);
+  } else {
+    Alert.alert(titulo, mensagem);
+  }
+}
+
+function confirmar(titulo, mensagem, textoConfirmar, aoConfirmar) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(titulo + '\n\n' + mensagem)) aoConfirmar();
+    return;
+  }
+  Alert.alert(titulo, mensagem, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: textoConfirmar, style: 'destructive', onPress: aoConfirmar },
+  ]);
+}
 
 function formatarData(texto) {
   if (!texto) return '';
@@ -143,30 +162,24 @@ export default function MeusEventosScreen({ navigation }) {
     }, [usuario?.idUsuario])
   );
 
-  function cancelarPresenca(evento) {
-    Alert.alert(
-      'Cancelar presença',
-      'Deseja cancelar sua presença em "' + evento.nomeEvento + '"?',
-      [
-        { text: 'Não', style: 'cancel' },
-        {
-          text: 'Sim, cancelar',
-          style: 'destructive',
-          onPress: () => {
-            axios
-              .delete(API_URL + '/eventos/' + evento.idEvento + '/participar')
-              .then(() => {
-                setConfirmados((atual) => atual.filter((x) => x !== evento.idEvento));
-              })
-              .catch((err) => {
-                console.log('Erro ao cancelar presença:', err.response ? err.response.data : err.message);
-                Alert.alert('Erro', 'Não foi possível cancelar a presença.');
-              });
-          },
-        },
-      ]
-    );
-  }
+ function cancelarPresenca(evento) {
+  confirmar(
+    'Cancelar presença',
+    'Deseja cancelar sua presença em "' + evento.nomeEvento + '"?',
+    'Sim, cancelar',
+    () => {
+      axios
+        .delete(API_URL + '/eventos/' + evento.idEvento + '/participar')
+        .then(() => {
+          setConfirmados((atual) => atual.filter((x) => x !== evento.idEvento));
+        })
+        .catch((err) => {
+          console.log('Erro ao cancelar presença:', err.response ? err.response.data : err.message);
+          avisar('Erro', 'Não foi possível cancelar a presença.');
+        });
+    }
+  );
+}
 
   const proximos = eventos.filter(
     (e) =>
@@ -180,6 +193,7 @@ export default function MeusEventosScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.tela}>
+      <AppHeader height={100} />
       <TouchableOpacity
         style={styles.circleButton}
         onPress={handleVoltar}
@@ -187,6 +201,7 @@ export default function MeusEventosScreen({ navigation }) {
       >
         <Ionicons name="chevron-back" size={20} color={GREEN_DARK} />
       </TouchableOpacity>
+      
 
       <ScrollView contentContainerStyle={styles.conteudo}>
         <Text style={styles.titulo}>Meus eventos</Text>
@@ -265,7 +280,7 @@ export default function MeusEventosScreen({ navigation }) {
                 botao={
                   <TouchableOpacity
                     style={jaAvaliou ? [styles.botao, styles.botaoContorno] : styles.botao}
-                    onPress={() => navigation.navigate('Evento')}
+                  onPress={() => navigation.navigate('Evento', { aba: 'avaliar', idEvento: evento.idEvento })}
                     activeOpacity={0.85}
                   >
                     <Text style={jaAvaliou ? styles.botaoContornoTexto : styles.botaoTexto}>

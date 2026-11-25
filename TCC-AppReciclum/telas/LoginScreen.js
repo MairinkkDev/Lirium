@@ -18,8 +18,9 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { useUsuario } from '../context/UsuarioContext';
- 
+import { useUsuario, API_URL } from '../context/UsuarioContext';
+
+const API_Login = API_URL + '/usuarios/login';
  
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -41,23 +42,29 @@ export default function LoginScreen({ navigation }) {
       senhaUsuario: senha,
     };
  
-    axios
-      .post(API_Login, loginDados, {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
+   axios
+  .post(API_Login, loginDados, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  })
 
-      .then((response) => {
-          return entrar(response.data.token, response.data.usuario);
-       })
+       .then(async (response) => {
+    console.log('LOGIN DATA:', JSON.stringify(response.data));
 
-      .then((response) => {
-        
-        setSenha('');
-        navigation.navigate('Home');
-      })
+    const token = response.data.token;
+    const dadosUsuario = response.data.usuario;
+
+    if (!token || !dadosUsuario) {
+      Alert.alert('Erro', 'Resposta de login inesperada do servidor.');
+      return;
+    }
+
+    await entrar(token, dadosUsuario);
+    setSenha('');
+    navigation.navigate('Home');
+  })
       
       .catch((err) => {
         console.error('Status:', err.response?.status);
@@ -105,6 +112,9 @@ export default function LoginScreen({ navigation }) {
             source={require('../assets/logo.png')}
             style={styles.logoImage}
           />
+          <Text style={styles.Reciclum}>
+            Reciclum 
+          </Text>
         </View>
       </LinearGradient>
  
@@ -233,6 +243,14 @@ const styles = StyleSheet.create({
     color: GREEN_DARK,
     letterSpacing: 1,
     marginBottom: 28,
+  },
+  Reciclum:{
+    fontSize: 24,
+    fontWeight: '500',
+    color: BG_CREAM,
+    letterSpacing: 1,
+    marginBottom: 28,
+    marginLeft: -5,
   },
   inputContainer: {
     flexDirection: 'row',
